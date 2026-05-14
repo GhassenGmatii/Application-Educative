@@ -109,6 +109,28 @@ using (var scope = app.Services.CreateScope())
         );
         context.SaveChanges();
     }
+
+    if (!context.Professeurs.Any())
+    {
+        context.Professeurs.AddRange(
+            new Professeur { FirstName = "Ahmed", LastName = "Ben Ali", Email = "ahmed.benali@gmail.com", Password = BCrypt.Net.BCrypt.HashPassword("1234"), Specialite = "Mathématiques", Telephone = "22334455" },
+            new Professeur { FirstName = "Sami", LastName = "Trabelsi", Email = "sami.trabelsi@gmail.com", Password = BCrypt.Net.BCrypt.HashPassword("1234"), Specialite = "Informatique", Telephone = "99887766" },
+            new Professeur { FirstName = "Nadia", LastName = "Mansour", Email = "nadia.mansour@gmail.com", Password = BCrypt.Net.BCrypt.HashPassword("1234"), Specialite = "Physique", Telephone = "55443322" }
+        );
+        context.SaveChanges();
+    }
+
+    if (!context.Etudiants.Any())
+    {
+        context.Etudiants.AddRange(
+            new Etudiant { Nom = "Gmati", Prenom = "Ghassen", Email = "ghassen@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Informatique" },
+            new Etudiant { Nom = "Jlassi", Prenom = "Mohamed", Email = "mohamed@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section B", Specialite = "Informatique" },
+            new Etudiant { Nom = "Ayari", Prenom = "Amina", Email = "amina@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Mathématiques" },
+            new Etudiant { Nom = "Boussetta", Prenom = "Sarra", Email = "sarra@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section B", Specialite = "Physique" },
+            new Etudiant { Nom = "Khemiri", Prenom = "Yassine", Email = "yassine@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Informatique" }
+        );
+        context.SaveChanges();
+    }
 }
 
 app.Run();

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Application_Educative.Models.Professeur>
+@model IEnumerable<Application_Educative.Models.Professeur>
 
 @{
     ViewData["Title"] = "Gestion des Professeurs";
@@ -229,10 +229,10 @@
                     <div>
                         <p class="mb-1 opacity-75">Sections couvertes</p>
                         <h3 class="mb-0 fw-bold">
-                            @Model.SelectMany(p => p.ProfesseurSections)
+                            @(Model.SelectMany(p => p.ProfesseurSections)
                             .Select(ps => ps.SectionId)
                             .Distinct()
-                            .Count()
+                            .Count())
                         </h3>
                     </div>
 
@@ -247,8 +247,8 @@
                     <div>
                         <p class="mb-1 opacity-75">Total heures/sem.</p>
                         <h3 class="mb-0 fw-bold">
-                            @Model.SelectMany(p => p.ProfesseurSections)
-                            .Sum(ps => ps.NombreHeures)h
+                            @(Model.SelectMany(p => p.ProfesseurSections)
+                            .Sum(ps => ps.NombreHeures))h
                         </h3>
                     </div>
 
