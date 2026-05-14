@@ -1,0 +1,35 @@
+﻿
+@model IEnumerable<string>
+
+@{
+    ViewData["Title"] = "Gestion Étudiants - Sélectionner Section";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">Sélectionner une Section</h2>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info">Aucune section disponible</div>
+            }
+            else
+            {
+                <ul class="list-group">
+                    @foreach (var section in Model)
+                    {
+                        <li class="list-group-item">
+                            @Html.ActionLink(section, "ListeParSection", "GestionEtudiant", new { section = section }, new { @class = "stretched-link text-decoration-none" })
+                        </li>
+                    }
+                </ul>
+            }
+
+            <div class="mt-4">
+                @Html.ActionLink("Ajouter un Étudiant", "Create", "GestionEtudiant", null, new { @class = "btn btn-primary btn-lg me-2" })
+                @Html.ActionLink("Retour au Dashboard", "Index", "Home", null, new { @class = "btn btn-secondary btn-lg" })
+            </div>
+        </div>
+    </div>
+</div>

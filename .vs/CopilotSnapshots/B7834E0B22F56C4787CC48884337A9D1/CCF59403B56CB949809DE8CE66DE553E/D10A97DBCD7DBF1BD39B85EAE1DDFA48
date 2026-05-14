@@ -1,0 +1,40 @@
+﻿@model List<string>
+
+@{
+    ViewData["Title"] = "Gestion Étudiants - Sélectionner Section";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">📚 Sélectionner une Section</h2>
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="alert alert-info">Aucune section disponible</div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var section in Model)
+                    {
+                        <a href="/GestionEtudiant/ListeParSection?section=@Uri.EscapeDataString(section)" 
+                           class="list-group-item list-group-item-action">
+                            <h5>@section</h5>
+                            <p class="text-muted">Cliquez pour voir les étudiants</p>
+                        </a>
+                    }
+                </div>
+            }
+
+            <div class="mt-4">
+                <a href="/GestionEtudiant/Create" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus"></i> Ajouter un Étudiant
+                </a>
+                <a href="/Home/Index" class="btn btn-secondary btn-lg">
+                    Retour au Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

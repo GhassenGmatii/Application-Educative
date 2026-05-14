@@ -1,0 +1,516 @@
+﻿@model List<Application_Educative.Models.Notification>
+@{
+    ViewData["Title"] = "Mes Notifications";
+    var absences = ViewBag.Absences as List<Application_Educative.Models.Absence>;
+    int nonLues = Model?.Count(n => !n.Lue) ?? 0;
+    int totalAbsences = absences?.Count ?? 0;
+    int justifiees = absences?.Count(a => a.Justifiee) ?? 0;
+    int nonJustifiees = totalAbsences - justifiees;
+}
+
+<style>
+    :root {
+        --orange: #F97316;
+        --orange-light: #FFF7ED;
+        --orange-mid: #FFEDD5;
+        --orange-dark: #EA580C;
+        --white: #FFFFFF;
+        --gray-50: #F9FAFB;
+        --gray-100: #F3F4F6;
+        --gray-200: #E5E7EB;
+        --gray-500: #6B7280;
+        --gray-700: #374151;
+        --gray-900: #111827;
+        --red: #EF4444;
+        --green: #22C55E;
+        --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+        --shadow-lg: 0 8px 32px rgba(249,115,22,.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { background: var(--gray-50); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--gray-900); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+        background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+        padding: 2rem 2rem 3.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -1px; left: 0; right: 0;
+        height: 40px;
+        background: var(--gray-50);
+        border-radius: 40px 40px 0 0;
+    }
+    .page-header h1 {
+        color: white;
+        font-size: 1.6rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+    .page-header p { color: rgba(255,255,255,.8); font-size: .9rem; margin-top: .3rem; }
+
+    /* ── STATS CARDS ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        padding: 0 1.5rem;
+        margin-top: -1.5rem;
+        position: relative;
+        z-index: 10;
+    }
+    .stat-card {
+        background: var(--white);
+        border-radius: 14px;
+        padding: 1rem .8rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+        border-top: 3px solid transparent;
+    }
+    .stat-card.orange { border-top-color: var(--orange); }
+    .stat-card.red    { border-top-color: var(--red); }
+    .stat-card.green  { border-top-color: var(--green); }
+    .stat-card .val {
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .stat-card.orange .val { color: var(--orange); }
+    .stat-card.red .val    { color: var(--red); }
+    .stat-card.green .val  { color: var(--green); }
+    .stat-card .lbl { font-size: .72rem; color: var(--gray-500); margin-top: .3rem; }
+
+    /* ── CONTAINER ── */
+    .container { padding: 1.5rem; }
+
+    /* ── TABS ── */
+    .tabs {
+        display: flex;
+        background: var(--white);
+        border-radius: 12px;
+        padding: 4px;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.2rem;
+        gap: 4px;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: .6rem .5rem;
+        border: none;
+        background: transparent;
+        border-radius: 9px;
+        font-size: .85rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+    }
+    .tab-btn.active {
+        background: var(--orange);
+        color: white;
+        box-shadow: 0 2px 8px rgba(249,115,22,.35);
+    }
+    .tab-btn .badge {
+        background: rgba(255,255,255,.3);
+        color: white;
+        border-radius: 20px;
+        font-size: .68rem;
+        padding: 1px 6px;
+        font-weight: 700;
+    }
+    .tab-btn:not(.active) .badge {
+        background: var(--orange-mid);
+        color: var(--orange-dark);
+    }
+
+    /* ── SUCCESS MESSAGE ── */
+    .alert-success {
+        background: #F0FDF4;
+        border: 1px solid #BBF7D0;
+        color: #15803D;
+        border-radius: 10px;
+        padding: .75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: .875rem;
+    }
+
+    /* ── MARQUER TOUT LU ── */
+    .btn-mark-all {
+        display: block;
+        width: 100%;
+        background: var(--orange-light);
+        border: 1.5px solid var(--orange-mid);
+        color: var(--orange-dark);
+        border-radius: 10px;
+        padding: .65rem 1rem;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 1rem;
+        transition: all .2s;
+    }
+    .btn-mark-all:hover { background: var(--orange-mid); }
+
+    /* ── NOTIFICATION CARDS ── */
+    .notif-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1rem 1rem 1rem 1.1rem;
+        margin-bottom: .75rem;
+        box-shadow: var(--shadow);
+        border-left: 4px solid var(--gray-200);
+        display: flex;
+        gap: .8rem;
+        align-items: flex-start;
+        transition: border-color .2s, box-shadow .2s;
+        position: relative;
+    }
+    .notif-card.non-lue {
+        border-left-color: var(--orange);
+        background: var(--orange-light);
+    }
+    .notif-card .notif-icon {
+        width: 36px; height: 36px;
+        border-radius: 10px;
+        background: var(--orange-mid);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .notif-card.non-lue .notif-icon { background: var(--orange); }
+    .notif-card .notif-msg {
+        font-size: .87rem;
+        color: var(--gray-700);
+        font-weight: 500;
+        line-height: 1.45;
+        flex: 1;
+    }
+    .notif-card .notif-date {
+        font-size: .72rem;
+        color: var(--gray-500);
+        margin-top: .25rem;
+    }
+    .notif-card .dot-new {
+        width: 8px; height: 8px;
+        background: var(--orange);
+        border-radius: 50%;
+        position: absolute;
+        top: 12px; right: 12px;
+    }
+
+    .mark-lue-btn {
+        background: none;
+        border: 1px solid var(--orange);
+        color: var(--orange);
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: .4rem;
+        transition: all .15s;
+    }
+    .mark-lue-btn:hover { background: var(--orange); color: white; }
+
+    /* ── ABSENCE CARDS ── */
+    .absence-card {
+        background: var(--white);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: .75rem;
+        box-shadow: var(--shadow);
+        border-left: 4px solid var(--red);
+        cursor: pointer;
+        transition: box-shadow .2s;
+    }
+    .absence-card.justifiee { border-left-color: var(--green); }
+    .absence-card:hover { box-shadow: var(--shadow-lg); }
+    .absence-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: .4rem;
+    }
+    .absence-matiere {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--gray-900);
+    }
+    .badge-statut {
+        font-size: .68rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+    .badge-nj { background: #FEE2E2; color: #DC2626; }
+    .badge-j  { background: #DCFCE7; color: #16A34A; }
+    .absence-meta {
+        font-size: .78rem;
+        color: var(--gray-500);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .absence-meta span { display: flex; align-items: center; gap: .25rem; }
+
+    /* ── DETAIL PANEL ── */
+    .detail-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+        z-index: 1000;
+        animation: fadeIn .2s;
+    }
+    .detail-overlay.open { display: flex; align-items: flex-end; }
+    .detail-panel {
+        background: var(--white);
+        border-radius: 20px 20px 0 0;
+        width: 100%;
+        padding: 1.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+        animation: slideUp .3s;
+    }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes slideUp { from { transform: translateY(60px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+    .detail-handle {
+        width: 40px; height: 4px;
+        background: var(--gray-200);
+        border-radius: 99px;
+        margin: 0 auto 1.2rem;
+    }
+    .detail-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--orange);
+        margin-bottom: 1rem;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: .6rem 0;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: .87rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .key { color: var(--gray-500); font-weight: 500; }
+    .detail-row .val { font-weight: 700; color: var(--gray-900); }
+    .close-btn {
+        width: 100%;
+        background: var(--orange);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: .75rem;
+        font-size: .9rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 1rem;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--gray-500);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: .5rem; }
+    .empty p { font-size: .87rem; }
+
+    /* ── TAB PANELS ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <h1>🔔 Mes Notifications</h1>
+    <p>Consultez vos absences et notifications en temps réel</p>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+    <div class="stat-card orange">
+        <div class="val">@totalAbsences</div>
+        <div class="lbl">Total absences</div>
+    </div>
+    <div class="stat-card red">
+        <div class="val">@nonJustifiees</div>
+        <div class="lbl">Non justifiées</div>
+    </div>
+    <div class="stat-card green">
+        <div class="val">@justifiees</div>
+        <div class="lbl">Justifiées</div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('notifs', this)">
+            🔔 Notifications
+            @if (nonLues > 0)
+            {
+                <span class="badge">@nonLues</span>
+            }
+        </button>
+        <button class="tab-btn" onclick="switchTab('absences', this)">
+            📋 Absences
+            <span class="badge">@totalAbsences</span>
+        </button>
+    </div>
+
+    <!-- ── ONGLET NOTIFICATIONS ── -->
+    <div id="tab-notifs" class="tab-panel active">
+
+        @if (nonLues > 0)
+        {
+            <form asp-action="MarquerToutLu" asp-controller="Notification" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-mark-all">✔ Tout marquer comme lu (@nonLues non lue(s))</button>
+            </form>
+        }
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty">
+                <div class="icon">🔕</div>
+                <p>Aucune notification pour l'instant.</p>
+            </div>
+        }
+        else
+        {
+            foreach (var n in Model)
+            {
+                <div class="notif-card @(n.Lue ? "" : "non-lue")">
+                    <div class="notif-icon">
+                        @(n.Type == "absence" ? "⚠️" : n.Type == "justification" ? "✅" : "ℹ️")
+                    </div>
+                    <div style="flex:1">
+                        <div class="notif-msg">@n.Message</div>
+                        <div class="notif-date">🕐 @n.DateCreation.ToString("dd/MM/yyyy à HH:mm")</div>
+                        @if (!n.Lue)
+                        {
+                            <form asp-action="MarquerLue" asp-controller="Notification"
+                                  asp-route-id="@n.Id" method="post" style="display:inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="mark-lue-btn">Marquer lu</button>
+                            </form>
+                        }
+                    </div>
+                    @if (!n.Lue)
+                    {
+                        <div class="dot-new"></div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <!-- ── ONGLET ABSENCES ── -->
+    <div id="tab-absences" class="tab-panel">
+
+        @if (absences == null || !absences.Any())
+        {
+            <div class="empty">
+                <div class="icon">🎉</div>
+                <p>Aucune absence enregistrée. Félicitations !</p>
+            </div>
+        }
+        else
+        {
+            foreach (var a in absences)
+            {
+                <div class="absence-card @(a.Justifiee ? "justifiee" : "")"
+                     onclick="showDetail(
+                        '@a.Matiere?.Nom',
+                        '@a.DateAbsence.ToString("dd/MM/yyyy")',
+                        '@(a.Professeur?.FirstName + " " + a.Professeur?.LastName)',
+                        '@a.Section?.Nom',
+                        '@(a.Justifiee ? "Justifiée" : "Non justifiée")',
+                        '@a.DateSaisie.ToString("dd/MM/yyyy à HH:mm")'
+                     )">
+                    <div class="absence-header">
+                        <div class="absence-matiere">📚 @a.Matiere?.Nom</div>
+                        <span class="badge-statut @(a.Justifiee ? "badge-j" : "badge-nj")">
+                            @(a.Justifiee ? "✅ Justifiée" : "❌ Non justifiée")
+                        </span>
+                    </div>
+                    <div class="absence-meta">
+                        <span>📅 @a.DateAbsence.ToString("dd/MM/yyyy")</span>
+                        <span>👤 @a.Professeur?.FirstName @a.Professeur?.LastName</span>
+                        @if (a.Section != null)
+                        {
+                            <span>🏫 @a.Section.Nom</span>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+<!-- ── DETAIL PANEL ── -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+    <div class="detail-panel">
+        <div class="detail-handle"></div>
+        <div class="detail-title">📋 Détails de l'absence</div>
+        <div class="detail-row"><span class="key">Matière</span>     <span class="val" id="dMatiere"></span></div>
+        <div class="detail-row"><span class="key">Date</span>        <span class="val" id="dDate"></span></div>
+        <div class="detail-row"><span class="key">Enseignant</span>  <span class="val" id="dProf"></span></div>
+        <div class="detail-row"><span class="key">Section</span>     <span class="val" id="dSection"></span></div>
+        <div class="detail-row"><span class="key">Statut</span>      <span class="val" id="dStatut"></span></div>
+        <div class="detail-row"><span class="key">Saisie le</span>   <span class="val" id="dSaisie"></span></div>
+        <button class="close-btn" onclick="closeDetailBtn()">Fermer</button>
+    </div>
+</div>
+
+<script>
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function showDetail(matiere, date, prof, section, statut, saisie) {
+        document.getElementById('dMatiere').textContent  = matiere  || '—';
+        document.getElementById('dDate').textContent     = date     || '—';
+        document.getElementById('dProf').textContent     = prof     || '—';
+        document.getElementById('dSection').textContent  = section  || '—';
+        document.getElementById('dStatut').textContent   = statut   || '—';
+        document.getElementById('dSaisie').textContent   = saisie   || '—';
+        document.getElementById('detailOverlay').classList.add('open');
+    }
+
+    function closeDetail(e) {
+        if (e.target === document.getElementById('detailOverlay'))
+            document.getElementById('detailOverlay').classList.remove('open');
+    }
+
+    function closeDetailBtn() {
+        document.getElementById('detailOverlay').classList.remove('open');
+    }
+</script>

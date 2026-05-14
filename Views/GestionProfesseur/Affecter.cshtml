@@ -1,0 +1,233 @@
+﻿@model Application_Educative.Models.Professeur
+@{
+    ViewData["Title"] = "Affecter des Sections";
+    var sections = ViewBag.Sections as List<Application_Educative.Models.Section>;
+    var jours = new[] { "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi" };
+    var existingSections = Model.ProfesseurSections?.ToList() ?? new List<Application_Educative.Models.ProfesseurSection>();
+    int rowCount = existingSections.Any() ? existingSections.Count : 1;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    body { background-color: #f0f4f8; }
+    .affect-card { border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); overflow: hidden; max-width: 760px; margin: 40px auto; }
+    .affect-header { background: linear-gradient(135deg, #17a2b8, #117a8b); color: white; padding: 30px; text-align: center; }
+    .affect-body { padding: 35px; background: white; }
+    .section-row { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 18px; margin-bottom: 16px; position: relative; }
+    .section-row:hover { border-color: #17a2b8; background: #f0fbfd; }
+    .row-number { position: absolute; top: -10px; left: 16px; background: linear-gradient(135deg, #17a2b8, #117a8b); color: white; border-radius: 20px; padding: 2px 12px; font-size: 12px; font-weight: 700; }
+    .form-label { font-weight: 600; color: #444; font-size: 13px; }
+    .form-control, .form-select { border-radius: 8px; border: 2px solid #dee2e6; padding: 9px 12px; font-size: 14px; }
+    .form-control:focus, .form-select:focus { border-color: #17a2b8; box-shadow: 0 0 0 0.2rem rgba(23,162,184,0.2); }
+    .btn-add { border: 2px dashed #17a2b8; color: #17a2b8; border-radius: 10px; padding: 12px; width: 100%; font-weight: 600; background: transparent; margin-bottom: 20px; }
+    .btn-add:hover { background: #f0fbfd; }
+    .btn-remove { position: absolute; top: 10px; right: 12px; background: none; border: none; color: #dc3545; font-size: 18px; cursor: pointer; }
+    .btn-remove:hover { color: #b02a37; }
+    .btn-save { background: linear-gradient(135deg, #17a2b8, #117a8b); color: white; border: none; border-radius: 10px; padding: 13px 30px; font-weight: 600; width: 100%; font-size: 16px; transition: all 0.2s; }
+    .btn-save:hover { transform: translateY(-2px); color: white; }
+    .btn-cancel { border-radius: 10px; padding: 13px 30px; font-weight: 600; width: 100%; font-size: 16px; }
+    .prof-bar { background: #e8f4fd; border: 1px solid #b8d4f0; border-radius: 12px; padding: 15px 20px; margin-bottom: 24px; }
+</style>
+
+<div class="container">
+    <div class="affect-card">
+        <div class="affect-header">
+            <i class="fas fa-link fa-3x mb-2"></i>
+            <h3 class="mb-1">Affecter des Sections</h3>
+            <p class="mb-0 opacity-75">@Model.FirstName @Model.LastName</p>
+        </div>
+        <div class="affect-body">
+
+            <div class="prof-bar d-flex align-items-center gap-3">
+                <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1a3c6e,#2e6db4);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;">
+                    @(Model.FirstName?[0])@(Model.LastName?[0])
+                </div>
+                <div>
+                    <strong>@Model.FirstName @Model.LastName</strong><br>
+                    <small class="text-muted">
+                        <i class="fas fa-envelope me-1"></i>@Model.Email
+                        @if (!string.IsNullOrEmpty(Model.Specialite))
+                        {
+                            <span class="ms-2"><i class="fas fa-tag me-1"></i>@Model.Specialite</span>
+                        }
+                    </small>
+                </div>
+            </div>
+
+            <form method="post" action="/GestionProfesseur/Affecter" id="affectForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="profId" value="@Model.Id" />
+
+                <div id="sectionsContainer">
+                    @for (int idx = 0; idx < rowCount; idx++)
+                    {
+                        var ex = idx < existingSections.Count ? existingSections[idx] : null;
+                        <div class="section-row" id="row_@idx">
+                            <span class="row-number">Section @(idx + 1)</span>
+                            <button type="button" class="btn-remove" onclick="removeRow(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label"><i class="fas fa-layer-group me-1 text-info"></i>Section</label>
+                                    <select name="SectionIds" class="form-select">
+                                        <option value="0">-- Choisir --</option>
+                                        @if (sections != null)
+                                        {
+                                            foreach (var sec in sections)
+                                            {
+                                                <option value="@sec.Id" @(ex?.SectionId == sec.Id ? "selected" : "")>
+                                                    @sec.Nom @(string.IsNullOrEmpty(sec.Niveau) ? "" : $"— {sec.Niveau}")
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><i class="fas fa-clock me-1 text-info"></i>Heures/sem.</label>
+                                    <input type="number" name="NombreHeures" min="1" max="40"
+                                           value="@(ex?.NombreHeures ?? 3)" class="form-control" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label"><i class="fas fa-calendar-day me-1 text-info"></i>Jour</label>
+                                    <select name="Jours" class="form-select">
+                                        <option value="">— Jour —</option>
+                                        @foreach (var j in jours)
+                                        {
+                                            <option value="@j" @(ex?.Jour == j ? "selected" : "")>@j</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><i class="fas fa-hourglass-start me-1 text-info"></i>Heure début</label>
+                                    <input type="time" name="HeuresDebut"
+                                           value="@(ex?.HeureDebut?.ToString(@"hh\:mm") ?? "")" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><i class="fas fa-hourglass-end me-1 text-info"></i>Heure fin</label>
+                                    <input type="time" name="HeuresFin"
+                                           value="@(ex?.HeureFin?.ToString(@"hh\:mm") ?? "")" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label"><i class="fas fa-calendar me-1 text-info"></i>Date début</label>
+                                    <input type="date" name="DateDebuts"
+                                           value="@(ex?.DateDebut?.ToString("yyyy-MM-dd") ?? "")" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button type="button" class="btn-add" onclick="addSection()">
+                    <i class="fas fa-plus-circle me-2"></i>Ajouter une section
+                </button>
+
+                <div class="d-flex gap-3">
+                    <a href="/GestionProfesseur/Index" class="btn btn-outline-secondary btn-cancel">
+                        <i class="fas fa-arrow-left me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-save" id="btnSave">
+                        <i class="fas fa-save me-1"></i>Enregistrer les affectations
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;">
+            <div class="modal-header border-0" style="background:linear-gradient(135deg,#17a2b8,#117a8b);">
+                <h5 class="modal-title text-white"><i class="fas fa-question-circle me-2"></i>Confirmer</h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-link fa-3x text-info mb-3"></i>
+                <p class="fs-5 fw-bold">Enregistrer ces affectations ?</p>
+                <p class="text-muted">Les anciennes affectations seront remplacées.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Annuler
+                </button>
+                <button type="button" id="btnConfirm" class="btn text-white px-4"
+                        style="background:linear-gradient(135deg,#17a2b8,#117a8b);">
+                    <i class="fas fa-check me-1"></i>Oui, enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const sectionsHtml = `@Html.Raw(string.Join("", (sections ?? new List<Application_Educative.Models.Section>())
+        .Select(s => $"<option value='{s.Id}'>{s.Nom}{(string.IsNullOrEmpty(s.Niveau) ? "" : $" — {s.Niveau}")}</option>")))`;
+
+    const joursOpts = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
+        .map(j => `<option value="${j}">${j}</option>`).join('');
+
+    function addSection() {
+        const count = document.querySelectorAll('.section-row').length;
+        const div = document.createElement('div');
+        div.className = 'section-row';
+        div.innerHTML = `
+            <span class="row-number">Section ${count + 1}</span>
+            <button type="button" class="btn-remove" onclick="removeRow(this)"><i class="fas fa-times"></i></button>
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <label class="form-label">Section</label>
+                    <select name="SectionIds" class="form-select">
+                        <option value="0">-- Choisir --</option>${sectionsHtml}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Heures/sem.</label>
+                    <input type="number" name="NombreHeures" value="3" min="1" max="40" class="form-control"/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Jour</label>
+                    <select name="Jours" class="form-select">
+                        <option value="">— Jour —</option>${joursOpts}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Heure début</label>
+                    <input type="time" name="HeuresDebut" class="form-control"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Heure fin</label>
+                    <input type="time" name="HeuresFin" class="form-control"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date début</label>
+                    <input type="date" name="DateDebuts" class="form-control"/>
+                </div>
+            </div>`;
+        document.getElementById('sectionsContainer').appendChild(div);
+        updateNumbers();
+    }
+
+    function removeRow(btn) {
+        if (document.querySelectorAll('.section-row').length <= 1) return;
+        btn.closest('.section-row').remove();
+        updateNumbers();
+    }
+
+    function updateNumbers() {
+        document.querySelectorAll('.section-row').forEach((row, i) => {
+            row.querySelector('.row-number').textContent = 'Section ' + (i + 1);
+        });
+    }
+
+    document.getElementById('btnSave').addEventListener('click', e => {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    });
+    document.getElementById('btnConfirm').addEventListener('click', () => {
+        document.getElementById('affectForm').submit();
+    });
+</script>sqlcmd -S "(localdb)\MSSQLLocalDB" -Q "DROP DATABASE IF EXISTS MyAdminDB"

@@ -1,0 +1,230 @@
+@model IEnumerable<Application_Educative.Models.Etudiant>
+@{
+    ViewData["Title"] = "Gestion des Étudiants";
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    bool searchPerformed = ViewBag.SearchPerformed ?? false;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    .page-header { background: linear-gradient(135deg, #1a3c6e 0%, #2e6db4 100%); color: white; padding: 25px 30px; border-radius: 14px; margin-bottom: 25px; }
+    .stat-card { border-radius: 12px; padding: 20px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    .stat-card.blue { background: linear-gradient(135deg, #007bff, #0056b3); }
+    .stat-card.green { background: linear-gradient(135deg, #28a745, #1e7e34); }
+    .stat-card.orange { background: linear-gradient(135deg, #fd7e14, #e65c00); }
+    .card-table { border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+    .table thead th { background: #1a3c6e; color: white; border: none; padding: 14px 16px; font-weight: 600; }
+    .table tbody tr:hover { background-color: #eef3fb; transition: 0.2s; }
+    .table tbody td { padding: 13px 16px; vertical-align: middle; }
+    .btn-edit { background: linear-gradient(135deg, #ffc107, #e0a800); color: #212529; border: none; border-radius: 7px; padding: 6px 14px; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .btn-edit:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,193,7,0.5); }
+    .btn-delete { background: linear-gradient(135deg, #dc3545, #b02a37); color: white; border: none; border-radius: 7px; padding: 6px 14px; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .btn-delete:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(220,53,69,0.5); }
+    .btn-new { background: linear-gradient(135deg, #28a745, #1e7e34); color: white; border: none; border-radius: 10px; padding: 10px 22px; font-weight: 600; transition: all 0.2s; }
+    .btn-new:hover { transform: translateY(-2px); color: white; }
+    .avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #1a3c6e, #2e6db4); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 10px; flex-shrink: 0; }
+    .search-box { border-radius: 10px; border: 2px solid #dee2e6; padding: 10px 15px; }
+    .search-box:focus { border-color: #2e6db4; box-shadow: 0 0 0 0.2rem rgba(46,109,180,0.15); }
+    .badge-etat { border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; }
+</style>
+
+<div class="container-fluid py-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-user-graduate me-2"></i>Gestion des Étudiants</h2>
+            <p class="mb-0 opacity-75">Gérez les étudiants de la plateforme</p>
+        </div>
+        <a href="/GestionEtudiant/Create" class="btn btn-new">
+            <i class="fas fa-user-plus me-2"></i>Ajouter un Étudiant
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card blue">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="mb-1 opacity-75">Total Étudiants</p><h3 class="mb-0 fw-bold">@Model.Count()</h3></div>
+                    <i class="fas fa-user-graduate fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card green">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="mb-1 opacity-75">Admis</p><h3 class="mb-0 fw-bold">@Model.Count(e => e.Etat == "Admis")</h3></div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card orange">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="mb-1 opacity-75">Redoublants</p><h3 class="mb-0 fw-bold">@Model.Count(e => e.Etat == "Redoublant")</h3></div>
+                    <i class="fas fa-redo fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recherche -->
+    <div class="card card-table mb-4 p-3">
+        <form method="get" action="/GestionEtudiant/Search" class="d-flex gap-2">
+            <input type="text" name="terme" value="@searchTerm"
+                   placeholder="Rechercher par nom, prénom ou email..."
+                   class="form-control search-box">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-search me-1"></i>Rechercher
+            </button>
+            @if (searchPerformed)
+            {
+                <a href="/GestionEtudiant/Index" class="btn btn-outline-secondary px-4">
+                    <i class="fas fa-times me-1"></i>Réinitialiser
+                </a>
+            }
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card card-table">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th><i class="fas fa-user me-1"></i>Nom & Prénom</th>
+                    <th><i class="fas fa-envelope me-1"></i>Email</th>
+                    <th><i class="fas fa-layer-group me-1"></i>Section</th>
+                    <th><i class="fas fa-tag me-1"></i>Spécialité</th>
+                    <th><i class="fas fa-info-circle me-1"></i>État</th>
+                    <th><i class="fas fa-calendar me-1"></i>Inscription</th>
+                    <th class="text-center"><i class="fas fa-cogs me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fas fa-user-graduate fa-3x mb-3 d-block opacity-25"></i>
+                            Aucun étudiant trouvé
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int i = 1;
+                    foreach (var etudiant in Model)
+                    {
+                        string init = "";
+                        if (!string.IsNullOrEmpty(etudiant.Prenom)) init += etudiant.Prenom[0];
+                        if (!string.IsNullOrEmpty(etudiant.Nom)) init += etudiant.Nom[0];
+
+                        <tr>
+                            <td><span class="badge bg-secondary">@i</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle">@init.ToUpper()</div>
+                                    <div>
+                                        <strong>@etudiant.Prenom @etudiant.Nom</strong>
+                                        @if (etudiant.DateModification.HasValue)
+                                        {
+                                            <br><small class="text-muted"><i class="fas fa-pen-to-square me-1"></i>modifié @etudiant.DateModification.Value.ToString("dd/MM/yyyy")</small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td><i class="fas fa-envelope text-primary me-1"></i>@etudiant.Email</td>
+                            <td><span class="badge bg-light text-dark border">@etudiant.Section</span></td>
+                            <td><span class="badge bg-light text-dark border"><i class="fas fa-tag me-1"></i>@etudiant.Specialite</span></td>
+                            <td>
+                                @if (etudiant.Etat == "Admis")
+                                {
+                                    <span class="badge bg-success badge-etat"><i class="fas fa-check me-1"></i>Admis</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark badge-etat"><i class="fas fa-redo me-1"></i>Redoublant</span>
+                                }
+                            </td>
+                            <td><small><i class="fas fa-clock text-muted me-1"></i>@etudiant.DateCreation.ToString("dd/MM/yyyy")</small></td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="/GestionEtudiant/Edit/@etudiant.EtudiantId" class="btn btn-edit">
+                                        <i class="fas fa-pen-to-square me-1"></i>Modifier
+                                    </a>
+                                    <button class="btn btn-delete"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal@etudiant.EtudiantId">
+                                        <i class="fas fa-trash-can me-1"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Suppression -->
+                        <div class="modal fade" id="deleteModal@etudiant.EtudiantId" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header border-0" style="background:linear-gradient(135deg,#dc3545,#b02a37);">
+                                        <h5 class="modal-title text-white">
+                                            <i class="fas fa-triangle-exclamation me-2"></i>Confirmer la suppression
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body text-center py-4">
+                                        <i class="fas fa-user-slash fa-4x text-danger mb-3"></i>
+                                        <h5>Supprimer cet étudiant ?</h5>
+                                        <p class="text-muted"><strong>@etudiant.Prenom @etudiant.Nom</strong></p>
+                                        <p class="text-muted"><i class="fas fa-envelope me-1"></i>@etudiant.Email</p>
+                                        <div class="alert alert-warning text-start">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            Toutes les absences de cet étudiant seront également supprimées.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 justify-content-center pb-4">
+                                        <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                            <i class="fas fa-xmark me-1"></i>Annuler
+                                        </button>
+                                        <form method="post" action="/GestionEtudiant/Delete/@etudiant.EtudiantId" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger px-4">
+                                                <i class="fas fa-trash-can me-1"></i>Oui, Supprimer
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => new bootstrap.Alert(a).close());
+    }, 4000);
+</script>

@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\chaim\\Desktop\\Application-Educative\\Application Educative.csproj": {}
+    "C:\\Users\\Ghassen\\OneDrive\\Desktop\\Application-Educative\\Application-Educative\\Application Educative.csproj": {}
   },
   "projects": {
-    "C:\\Users\\chaim\\Desktop\\Application-Educative\\Application Educative.csproj": {
+    "C:\\Users\\Ghassen\\OneDrive\\Desktop\\Application-Educative\\Application-Educative\\Application Educative.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\chaim\\Desktop\\Application-Educative\\Application Educative.csproj",
+        "projectUniqueName": "C:\\Users\\Ghassen\\OneDrive\\Desktop\\Application-Educative\\Application-Educative\\Application Educative.csproj",
         "projectName": "Application Educative",
-        "projectPath": "C:\\Users\\chaim\\Desktop\\Application-Educative\\Application Educative.csproj",
-        "packagesPath": "C:\\Users\\chaim\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\chaim\\Desktop\\Application-Educative\\obj\\",
+        "projectPath": "C:\\Users\\Ghassen\\OneDrive\\Desktop\\Application-Educative\\Application-Educative\\Application Educative.csproj",
+        "packagesPath": "C:\\Users\\Ghassen\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Ghassen\\OneDrive\\Desktop\\Application-Educative\\Application-Educative\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\chaim\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Ghassen\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -45,7 +45,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -96,7 +96,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.312/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

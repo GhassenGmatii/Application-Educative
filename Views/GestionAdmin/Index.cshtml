@@ -1,0 +1,344 @@
+﻿@model IEnumerable<Application_Educative.Models.Admin>
+@{
+    ViewData["Title"] = "Gestion des Administrateurs";
+    string currentUserEmail = ViewBag.CurrentUserEmail;
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    bool searchPerformed = ViewBag.SearchPerformed ?? false;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    body { background-color: #f4f6f9; }
+    .page-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+        color: white;
+        padding: 25px 30px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .stat-card.blue  { background: linear-gradient(135deg, #007bff, #0056b3); }
+    .stat-card.green { background: linear-gradient(135deg, #28a745, #1e7e34); }
+    .stat-card.orange{ background: linear-gradient(135deg, #fd7e14, #e65c00); }
+    .card-table {
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .table thead th {
+        background: #1e3a5f;
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 14px 16px;
+    }
+    .table tbody tr:hover { background-color: #f0f5ff; transition: 0.2s; }
+    .table tbody td { padding: 12px 16px; vertical-align: middle; }
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        color: #212529;
+        border: none;
+        border-radius: 8px;
+        padding: 7px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+    .btn-edit:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,193,7,0.5); }
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545, #b02a37);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 7px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+    .btn-delete:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(220,53,69,0.5); }
+    .btn-new {
+        background: linear-gradient(135deg, #28a745, #1e7e34);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 22px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-new:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40,167,69,0.4); color: white; }
+    .modal-header-danger { background: linear-gradient(135deg, #dc3545, #b02a37); color: white; }
+    .search-box { border-radius: 10px; border: 2px solid #dee2e6; padding: 10px 15px; }
+    .search-box:focus { border-color: #2d6a9f; box-shadow: 0 0 0 0.2rem rgba(45,106,159,0.15); }
+    .avatar-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Alerte succès -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-users-cog me-2"></i>Gestion des Administrateurs</h2>
+            <p class="mb-0 opacity-75">Gérez les accès administrateurs de la plateforme</p>
+        </div>
+        <a href="/GestionAdmin/Create" class="btn btn-new">
+            <i class="fas fa-user-plus me-2"></i>Nouvel Admin
+        </a>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card blue">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Total Admins</p>
+                        <h3 class="mb-0 fw-bold">@Model.Count()</h3>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card green">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Connecté</p>
+                        <h3 class="mb-0 fw-bold">@currentUserEmail?.Split('@')[0]</h3>
+                    </div>
+                    <i class="fas fa-user-shield fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card orange">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Dernier ajouté</p>
+                        <h3 class="mb-0 fw-bold" style="font-size:18px;">
+                            @Model.OrderByDescending(a => a.DateAjout).FirstOrDefault()?.Username?.Split('@')[0]
+                        </h3>
+                    </div>
+                    <i class="fas fa-user-plus fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recherche -->
+    <div class="card card-table mb-4 p-3">
+        <form method="get" action="/GestionAdmin/Search" class="d-flex gap-2">
+            <input type="text" name="email" value="@searchTerm"
+                   placeholder="Rechercher par email..." class="form-control search-box">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-search me-1"></i>Rechercher
+            </button>
+            @if (searchPerformed)
+            {
+                <a href="/GestionAdmin/Index" class="btn btn-outline-secondary px-4">
+                    <i class="fas fa-times me-1"></i>Réinitialiser
+                </a>
+            }
+        </form>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card card-table">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th><i class="fas fa-user me-1"></i>Nom & Prénom</th>
+                    <th><i class="fas fa-envelope me-1"></i>Email</th>
+                    <th><i class="fas fa-calendar-plus me-1"></i>Date d'ajout</th>
+                    <th><i class="fas fa-calendar-check me-1"></i>Dernière modif</th>
+                    <th><i class="fas fa-circle me-1"></i>Statut</th>
+                    <th class="text-center"><i class="fas fa-cogs me-1"></i>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            Aucun administrateur trouvé
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int i = 1;
+                    foreach (var item in Model)
+                    {
+                        string initiales = "";
+                        if (!string.IsNullOrEmpty(item.FirstName))
+                            initiales += item.FirstName[0];
+                        if (!string.IsNullOrEmpty(item.LastName))
+                            initiales += item.LastName[0];
+                        if (string.IsNullOrEmpty(initiales))
+                            initiales = item.Username[0].ToString().ToUpper();
+
+                        <tr>
+                            <td><span class="badge bg-secondary">@i</span></td>
+
+                            <!-- Nom & Prénom -->
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle">@initiales</div>
+                                    <div>
+                                        @if (!string.IsNullOrEmpty(item.FirstName) || !string.IsNullOrEmpty(item.LastName))
+                                        {
+                                            <strong>@item.FirstName @item.LastName</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Non renseigné</span>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Email -->
+                            <td>
+                                <i class="fas fa-envelope text-primary me-1"></i>
+                                @item.Username
+                            </td>
+
+                            <!-- Date ajout -->
+                            <td>
+                                <i class="fas fa-clock text-muted me-1"></i>
+                                @item.DateAjout.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+
+                            <!-- Date modification -->
+                            <td>
+                                @if (item.DateModification.HasValue)
+                                {
+                                    <span class="text-success">
+                                        <i class="fas fa-pen-to-square me-1"></i>
+                                        @item.DateModification.Value.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">
+                                        <i class="fas fa-minus me-1"></i>Jamais modifié
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Statut -->
+                            <td>
+                                @if (item.Username == currentUserEmail)
+                                {
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-circle me-1"></i>Actif
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary px-3 py-2">
+                                        <i class="fas fa-circle me-1"></i>Inactif
+                                    </span>
+                                }
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-center">
+                                <a href="/GestionAdmin/Edit/@item.Id" class="btn btn-edit me-1">
+                                    <i class="fas fa-pen-to-square me-1"></i>Modifier
+                                </a>
+                                <button class="btn btn-delete"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal@item.Id">
+                                    <i class="fas fa-trash-can me-1"></i>Supprimer
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Suppression -->
+                        <div class="modal fade" id="deleteModal@item.Id" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header modal-header-danger border-0">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-triangle-exclamation me-2"></i>
+                                            Confirmer la suppression
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body text-center py-4">
+                                        <i class="fas fa-user-slash fa-4x text-danger mb-3"></i>
+                                        <h5>Supprimer cet administrateur ?</h5>
+                                        <p class="text-muted mb-1">
+                                            <strong>@item.FirstName @item.LastName</strong>
+                                        </p>
+                                        <p class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i>@item.Username
+                                        </p>
+                                        <div class="alert alert-warning mt-3 text-start">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            Cette action est <strong>irréversible</strong>.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 justify-content-center pb-4">
+                                        <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">
+                                            <i class="fas fa-xmark me-1"></i>Annuler
+                                        </button>
+                                        <form method="post" action="/GestionAdmin/Delete/@item.Id" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger px-4">
+                                                <i class="fas fa-trash-can me-1"></i>Oui, Supprimer
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        i++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => {
+            new bootstrap.Alert(a).close();
+        });
+    }, 4000);
+</script>

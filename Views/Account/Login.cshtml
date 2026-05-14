@@ -1,0 +1,123 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login - Educated Apprenant</title>
+
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+
+    <style>
+        body.bg-gradient-primary {
+            background: #0a0c0f !important;
+        }
+
+        .card {
+            background: #1a1e22 !important;
+            border: 1px solid rgba(255,255,255,0.05) !important;
+        }
+
+        .card-body {
+            color: #ffffff;
+        }
+
+        .text-gray-900 {
+            color: #ffffff !important;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem !important;
+        }
+
+            .text-gray-900 span {
+                color: #ff6b00;
+            }
+
+        .form-control-user {
+            background: #0f1317 !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            color: #ffffff !important;
+            padding: 1.2rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+            .form-control-user:focus {
+                border-color: #ff6b00 !important;
+                box-shadow: 0 0 0 0.2rem rgba(255, 107, 0, 0.25) !important;
+            }
+
+        .btn-primary {
+            background-color: #ff6b00 !important;
+            border-color: #ff6b00 !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+            .btn-primary:hover {
+                background-color: #e05e00 !important;
+            }
+    </style>
+</head>
+
+<body class="bg-gradient-primary">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-5 col-lg-6 col-md-8">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-5">
+
+                        <div class="text-center">
+                            <div style="color:#ff6b00; font-size:2.5rem;">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h1 class="h4 text-gray-900 mb-4">
+                                Bienvenue sur <span>Educated</span> Apprenant
+                            </h1>
+                            <p style="color: rgba(255,255,255,0.6);">Bon retour !</p>
+                        </div>
+
+                        <form method="post" action="/Admin/Login">
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-group">
+                                <input type="text"
+                                       class="form-control form-control-user"
+                                       name="username"
+                                       placeholder="Nom d'utilisateur"
+                                       required />
+
+                                <input type="password"
+                                       class="form-control form-control-user"
+                                       name="password"
+                                       placeholder="Mot de passe"
+                                       required />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-user btn-block">
+                                CONNEXION
+                            </button>
+                        </form>
+
+                        <hr>
+
+                        <div class="text-center">
+                            <a class="small" href="#">Mot de passe oublié ?</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+</body>
+</html>

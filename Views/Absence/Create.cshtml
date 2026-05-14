@@ -1,0 +1,388 @@
+﻿@{
+    ViewData["Title"] = "Enregistrer les absences";
+    var matieres = ViewBag.Matieres as IEnumerable<Application_Educative.Models.Matiere>;
+    var sections = ViewBag.Sections as IEnumerable<Application_Educative.Models.Section>;
+    var professeurs = ViewBag.Professeurs as IEnumerable<Application_Educative.Models.Professeur>;
+    var role = ViewBag.Role as string;
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+    body, #page-top, #wrapper, #content-wrapper, #content, .container-fluid {
+        background: #FAFAFA !important;
+    }
+    .abs-wrap {
+        font-family: 'DM Sans', sans-serif;
+        color: #27272A;
+        background: #FAFAFA;
+        padding-bottom: 60px;
+    }
+    .abs-wrap .ah {
+        background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+        border-radius: 16px; padding: 24px 28px;
+        display: flex; align-items: center; gap: 16px;
+        margin-bottom: 20px; box-shadow: 0 4px 20px rgba(249,115,22,.3);
+    }
+    .abs-wrap .ah-icon { width: 46px; height: 46px; background: rgba(255,255,255,.25); border-radius: 12px; display: grid; place-items: center; font-size: 1.3rem; }
+    .abs-wrap .ah h1   { color: #fff !important; font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 700; margin: 0; }
+    .abs-wrap .ah p    { color: rgba(255,255,255,.8) !important; font-size: .82rem; margin: 0; }
+
+    .abs-wrap .stepper { display: flex; align-items: center; margin-bottom: 20px; }
+    .abs-wrap .s-item  { display: flex; align-items: center; gap: 8px; flex: 1; }
+    .abs-wrap .s-item:last-child { flex: 0; }
+    .abs-wrap .s-circle { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #E4E4E7; background: #fff; color: #A1A1AA; font-family: 'Sora', sans-serif; font-size: .82rem; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; transition: all .3s; }
+    .abs-wrap .s-circle.active { border-color: #F97316; background: #F97316; color: #fff; box-shadow: 0 2px 10px rgba(249,115,22,.4); }
+    .abs-wrap .s-circle.done   { border-color: #F97316; background: #FFF7ED; color: #F97316; }
+    .abs-wrap .s-label         { font-size: .76rem; color: #A1A1AA; font-weight: 500; white-space: nowrap; }
+    .abs-wrap .s-label.active  { color: #F97316; font-weight: 700; }
+    .abs-wrap .s-line          { flex: 1; height: 2px; background: #E4E4E7; margin: 0 6px; transition: background .3s; }
+    .abs-wrap .s-line.done     { background: #FED7AA; }
+
+    .abs-wrap .acard { background: #fff !important; border-radius: 16px; border: 1.5px solid #E4E4E7; padding: 28px 32px; box-shadow: 0 1px 4px rgba(0,0,0,.06); color: #27272A !important; }
+
+    .abs-wrap .panel     { display: none; }
+    .abs-wrap .panel.vis { display: block; }
+
+    .abs-wrap .ptitle { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 700; color: #27272A !important; display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .abs-wrap .ptitle .pbadge { background: #FFF7ED; color: #F97316; font-size: .72rem; font-weight: 700; padding: 2px 10px; border-radius: 20px; }
+
+    .abs-wrap .fgrid      { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .abs-wrap .fgrid.full { grid-template-columns: 1fr; }
+    .abs-wrap .fwrap      { display: flex; flex-direction: column; gap: 5px; }
+    .abs-wrap .fwrap label { font-size: .75rem; font-weight: 700; color: #52525B !important; text-transform: uppercase; letter-spacing: .05em; }
+    .abs-wrap .fwrap select,
+    .abs-wrap .fwrap input[type="date"] { padding: 10px 14px; border-radius: 9px; border: 1.5px solid #E4E4E7 !important; background: #fff !important; color: #27272A !important; font-family: 'DM Sans', sans-serif; font-size: .92rem; width: 100%; appearance: none; -webkit-appearance: none; }
+    .abs-wrap .fwrap select:focus,
+    .abs-wrap .fwrap input:focus { outline: none; border-color: #F97316 !important; box-shadow: 0 0 0 3px rgba(249,115,22,.12); }
+    .abs-wrap .sw       { position: relative; }
+    .abs-wrap .sw::after { content: '▾'; position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: #F97316; pointer-events: none; }
+
+    .abs-wrap .loader      { display: none; align-items: center; gap: 10px; color: #F97316; font-size: .86rem; margin: 12px 0; }
+    .abs-wrap .loader.show { display: flex; }
+    .abs-wrap .spin        { width: 18px; height: 18px; border: 2px solid #FED7AA; border-top-color: #F97316; border-radius: 50%; animation: abspin .7s linear infinite; }
+    @@keyframes abspin { to { transform: rotate(360deg); } }
+
+    .abs-wrap .sel-all-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #FAFAFA !important; border: 1.5px solid #E4E4E7; border-bottom: none; border-radius: 10px 10px 0 0; }
+    .abs-wrap .sel-all-row label { font-size: .84rem; color: #52525B !important; cursor: pointer; }
+    .abs-wrap .twrap { border: 1.5px solid #E4E4E7; border-radius: 0 0 10px 10px; overflow: hidden; }
+    .abs-wrap table  { width: 100%; border-collapse: collapse; }
+    .abs-wrap table thead tr { background: linear-gradient(135deg, #F97316, #EA580C); }
+    .abs-wrap table thead th { padding: 12px 16px; text-align: left; font-family: 'Sora', sans-serif; font-size: .75rem; font-weight: 700; color: #fff !important; text-transform: uppercase; letter-spacing: .05em; }
+    .abs-wrap table tbody tr { border-bottom: 1px solid #F4F4F5; }
+    .abs-wrap table tbody tr:last-child { border-bottom: none; }
+    .abs-wrap table tbody td { padding: 12px 16px; font-size: .88rem; color: #27272A !important; background: #fff !important; }
+    .abs-wrap table tbody tr:hover td { background: #FFF7ED !important; }
+    .abs-wrap .snum { width: 26px; height: 26px; border-radius: 50%; background: #FFF7ED; color: #F97316; font-size: .75rem; font-weight: 700; display: grid; place-items: center; }
+
+    .abs-wrap .sbg  { display: flex; gap: 6px; }
+    .abs-wrap .sbtn { padding: 5px 14px; border-radius: 20px; border: 1.5px solid; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+    .abs-wrap .sbtn.present     { background: #F0FDF4; border-color: #86EFAC; color: #16A34A; }
+    .abs-wrap .sbtn.present.sel { background: #22C55E; border-color: #22C55E; color: #fff; }
+    .abs-wrap .sbtn.absent      { background: #F4F4F5; border-color: #E4E4E7; color: #A1A1AA; }
+    .abs-wrap .sbtn.absent.sel  { background: #F97316; border-color: #F97316; color: #fff; }
+
+    .abs-wrap .sbox    { background: #FFF7ED !important; border: 1.5px solid #FED7AA; border-radius: 12px; padding: 20px 24px; margin-bottom: 18px; }
+    .abs-wrap .sbox h3 { font-family: 'Sora', sans-serif; font-size: .92rem; color: #EA580C !important; margin: 0 0 12px; }
+    .abs-wrap .srow    { display: flex; justify-content: space-between; font-size: .86rem; color: #52525B !important; margin-bottom: 6px; }
+    .abs-wrap .srow strong { color: #27272A !important; }
+    .abs-wrap .big-num { font-family: 'Sora', sans-serif; font-size: 2.5rem; font-weight: 800; color: #F97316; text-align: center; margin: 10px 0 2px; }
+    .abs-wrap .big-lbl { text-align: center; font-size: .8rem; color: #A1A1AA !important; }
+
+    .abs-wrap .ainfo { background: #FFF7ED !important; border-left: 4px solid #F97316; border-radius: 9px; padding: 13px 16px; font-size: .86rem; color: #EA580C !important; margin-bottom: 18px; }
+    .abs-wrap .empty { text-align: center; padding: 36px; color: #A1A1AA !important; font-size: .88rem; }
+
+    .abs-wrap .btn-or  { background: linear-gradient(135deg, #F97316, #EA580C) !important; color: #fff !important; border: none; border-radius: 10px; padding: 11px 26px; font-family: 'Sora', sans-serif; font-size: .88rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 3px 12px rgba(249,115,22,.35); transition: transform .15s, box-shadow .15s; }
+    .abs-wrap .btn-or:hover    { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,.45); }
+    .abs-wrap .btn-or:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .abs-wrap .btn-out { background: #fff !important; color: #F97316 !important; border: 1.5px solid #F97316; border-radius: 10px; padding: 10px 22px; font-family: 'Sora', sans-serif; font-size: .88rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+    .abs-wrap .btn-out:hover { background: #FFF7ED !important; }
+    .abs-wrap .brow { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; }
+
+    @@media(max-width:640px){ .abs-wrap .fgrid { grid-template-columns: 1fr; } .abs-wrap .acard { padding: 18px 14px; } }
+</style>
+
+<div class="abs-wrap">
+
+    <div class="ah">
+        <div class="ah-icon">📋</div>
+        <div>
+            <h1>Enregistrer les absences</h1>
+            <p>Sélectionnez les options puis marquez les étudiants absents</p>
+        </div>
+    </div>
+
+    <div class="stepper">
+        <div class="s-item"><div class="s-circle active" id="sc1">1</div><div class="s-label active" id="sl1">Paramètres</div></div>
+        <div class="s-line" id="sline1"></div>
+        <div class="s-item"><div class="s-circle" id="sc2">2</div><div class="s-label" id="sl2">Étudiants</div></div>
+        <div class="s-line" id="sline2"></div>
+        <div class="s-item"><div class="s-circle" id="sc3">3</div><div class="s-label" id="sl3">Confirmation</div></div>
+    </div>
+
+    <div class="acard">
+
+        <!-- STEP 1 -->
+        <div class="panel vis" id="panel1">
+            <div class="ptitle">Paramètres de la séance <span class="pbadge">Étape 1/3</span></div>
+            <div class="fgrid">
+                <div class="fwrap">
+                    <label>Section</label>
+                    <div class="sw">
+                        <select id="sectionSelect">
+                            <option value="">— Choisir —</option>
+                            @if (sections != null) { @foreach (var s in sections) { <option value="@s.Id">@s.Nom</option> } }
+                        </select>
+                    </div>
+                </div>
+                <div class="fwrap">
+                    <label>Matière</label>
+                    <div class="sw">
+                        <select id="matiereSelect">
+                            <option value="">— Choisir —</option>
+                            @if (matieres != null) { @foreach (var m in matieres) { <option value="@m.Id">@m.Nom</option> } }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="fgrid">
+                <div class="fwrap">
+                    <label>Date de séance</label>
+                    <input type="date" id="dateInput" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="fwrap">
+                    <label>Heure de séance</label>
+                    <div class="sw">
+                        <select id="heureSelect">
+                            <option value="">— Choisir —</option>
+                            <option value="08:00">08:00 — 09:30</option>
+                            <option value="09:30">09:30 — 11:00</option>
+                            <option value="11:00">11:00 — 12:30</option>
+                            <option value="13:00">13:00 — 14:30</option>
+                            <option value="14:30">14:30 — 16:00</option>
+                            <option value="16:00">16:00 — 17:30</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            @if (role == "Admin" && professeurs != null) {
+                <div class="fgrid full">
+                    <div class="fwrap">
+                        <label>Professeur responsable</label>
+                        <div class="sw">
+                            <select id="professeurSelect">
+                                <option value="">— Choisir —</option>
+                                @foreach (var p in professeurs) { <option value="@p.Id">@p.FirstName @p.LastName</option> }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="brow">
+                <span></span>
+                <button type="button" class="btn-or" id="btnStep1">Charger les étudiants ›</button>
+            </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="panel" id="panel2">
+            <div class="ptitle">Marquer les absents <span class="pbadge" id="etudiantCount">0 étudiant(s)</span></div>
+            <div class="ainfo" id="seanceInfo">📅 Chargement…</div>
+            <div class="loader" id="loadingBar"><div class="spin"></div> Chargement des étudiants…</div>
+            <div id="tableWrap" style="display:none">
+                <div class="sel-all-row">
+                    <input type="checkbox" id="selectAll" style="accent-color:#F97316;width:15px;height:15px;cursor:pointer;" />
+                    <label for="selectAll">Tout marquer absent</label>
+                    <span style="margin-left:auto;font-size:.8rem;color:#F97316;font-weight:700;" id="absCtr">0 absent(s)</span>
+                </div>
+                <div class="twrap">
+                    <table>
+                        <thead><tr><th>#</th><th>Étudiant</th><th>Statut</th></tr></thead>
+                        <tbody id="studentTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="empty" id="emptyState" style="display:none">⚠️ Aucun étudiant trouvé pour cette section.</div>
+            <div class="brow">
+                <button type="button" class="btn-out" id="btnBack1">‹ Retour</button>
+                <button type="button" class="btn-or"  id="btn2Next" disabled>Confirmer ›</button>
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="panel" id="panel3">
+            <div class="ptitle">Confirmation &amp; notifications <span class="pbadge">Étape 3/3</span></div>
+            <div class="sbox">
+                <h3>📋 Récapitulatif</h3>
+                <div class="srow"><span>Section</span><strong id="rSection">—</strong></div>
+                <div class="srow"><span>Matière</span><strong id="rMatiere">—</strong></div>
+                <div class="srow"><span>Date</span><strong id="rDate">—</strong></div>
+                <div class="srow"><span>Heure</span><strong id="rHeure">—</strong></div>
+                <hr style="border:none;border-top:1px solid #FED7AA;margin:12px 0;" />
+                <div class="big-num" id="rAbsentCount">0</div>
+                <div class="big-lbl">étudiant(s) absent(s)</div>
+            </div>
+            <div class="ainfo">🔔 Une notification sera envoyée automatiquement à chaque étudiant absent.</div>
+            <div class="brow">
+                <button type="button" class="btn-out" id="btnBack2">‹ Retour</button>
+                <button type="button" class="btn-or"  id="btnSubmit">📤 Enregistrer &amp; Notifier</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Formulaire caché — soumis directement par JS, bypass jQuery/sb-admin-2 -->
+<form id="absForm" method="post" action="/Absence/EnregistrerAbsences" style="display:none">
+    @Html.AntiForgeryToken()
+    <div id="hiddenInputs"></div>
+</form>
+
+<script>
+(function () {
+    'use strict';
+
+    var allStudents = [];
+    var absentSet   = new Set();
+
+    function setStep(n) {
+        [1, 2, 3].forEach(function (i) {
+            document.getElementById('panel' + i).classList.toggle('vis', i === n);
+            var c = document.getElementById('sc' + i);
+            var l = document.getElementById('sl' + i);
+            c.className = 's-circle' + (i < n ? ' done' : i === n ? ' active' : '');
+            l.className = 's-label'  + (i === n ? ' active' : '');
+        });
+        [1, 2].forEach(function (i) {
+            document.getElementById('sline' + i).classList.toggle('done', i < n);
+        });
+    }
+
+    document.getElementById('btnStep1').addEventListener('click', function () {
+        var sec  = document.getElementById('sectionSelect');
+        var mat  = document.getElementById('matiereSelect');
+        var date = document.getElementById('dateInput');
+        var hr   = document.getElementById('heureSelect');
+        if (!sec.value || !mat.value || !date.value || !hr.value) {
+            alert('Veuillez remplir tous les champs.'); return;
+        }
+        setStep(2);
+        loadStudents(sec.value);
+        document.getElementById('seanceInfo').textContent =
+            '📅 ' + sec.options[sec.selectedIndex].text +
+            ' · ' + mat.options[mat.selectedIndex].text +
+            ' · ' + fmtDate(date.value) + ' à ' + hr.value;
+    });
+
+    document.getElementById('btnBack1').addEventListener('click', function () { setStep(1); });
+
+    document.getElementById('btn2Next').addEventListener('click', function () {
+        if (!absentSet.size) { alert('Marquez au moins un étudiant absent.'); return; }
+        var sec  = document.getElementById('sectionSelect');
+        var mat  = document.getElementById('matiereSelect');
+        document.getElementById('rSection').textContent     = sec.options[sec.selectedIndex].text;
+        document.getElementById('rMatiere').textContent     = mat.options[mat.selectedIndex].text;
+        document.getElementById('rDate').textContent        = fmtDate(document.getElementById('dateInput').value);
+        document.getElementById('rHeure').textContent       = document.getElementById('heureSelect').value;
+        document.getElementById('rAbsentCount').textContent = absentSet.size;
+        setStep(3);
+    });
+
+    document.getElementById('btnBack2').addEventListener('click', function () { setStep(2); });
+
+    document.getElementById('btnSubmit').addEventListener('click', function () {
+        var box = document.getElementById('hiddenInputs');
+        box.innerHTML = '';
+
+        function addField(name, value) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = name; inp.value = value;
+            box.appendChild(inp);
+        }
+
+        addField('sectionId',   document.getElementById('sectionSelect').value);
+        addField('matiereId',   document.getElementById('matiereSelect').value);
+        addField('dateAbsence', document.getElementById('dateInput').value);
+        addField('heureSeance', document.getElementById('heureSelect').value);
+
+        var profSel = document.getElementById('professeurSelect');
+        if (profSel) addField('ProfesseurId', profSel.value);
+
+        absentSet.forEach(function (id) {
+            addField('etudiantIds', id);
+            addField('motifs', '');
+        });
+
+        // Soumet le formulaire caché — contourne complètement jQuery et sb-admin-2
+        document.getElementById('absForm').submit();
+    });
+
+    function loadStudents(sId) {
+        document.getElementById('loadingBar').classList.add('show');
+        document.getElementById('tableWrap').style.display  = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+        absentSet.clear(); updateCtr();
+
+        fetch('/Absence/GetEtudiantsBySection?sectionId=' + sId)
+            .then(function (r) { return r.json(); })
+            .then(function (data) { allStudents = data; renderTable(data); })
+            .catch(function () { document.getElementById('emptyState').style.display = 'block'; })
+            .finally(function () { document.getElementById('loadingBar').classList.remove('show'); });
+    }
+
+    function renderTable(list) {
+        var tb = document.getElementById('studentTbody');
+        tb.innerHTML = '';
+        document.getElementById('etudiantCount').textContent = list.length + ' étudiant(s)';
+        if (!list.length) {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('btn2Next').disabled = true;
+            return;
+        }
+        document.getElementById('tableWrap').style.display = 'block';
+        document.getElementById('btn2Next').disabled = false;
+        list.forEach(function (s, i) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><div class="snum">' + (i + 1) + '</div></td>' +
+                '<td style="font-weight:600">' + s.prenom + ' ' + s.nom + '</td>' +
+                '<td><div class="sbg">' +
+                    '<button type="button" class="sbtn present sel" id="bP' + s.id + '">✅ Présent</button>' +
+                    '<button type="button" class="sbtn absent"      id="bA' + s.id + '">ABSENT</button>' +
+                '</div></td>';
+            tb.appendChild(tr);
+            document.getElementById('bP' + s.id).addEventListener('click', function () { setP(s.id); });
+            document.getElementById('bA' + s.id).addEventListener('click', function () { setA(s.id); });
+        });
+    }
+
+    function setA(id) {
+        absentSet.add(id);
+        document.getElementById('bP' + id).classList.remove('sel');
+        document.getElementById('bA' + id).classList.add('sel');
+        updateCtr();
+        document.getElementById('btn2Next').disabled = false;
+    }
+    function setP(id) {
+        absentSet.delete(id);
+        document.getElementById('bA' + id).classList.remove('sel');
+        document.getElementById('bP' + id).classList.add('sel');
+        updateCtr();
+        document.getElementById('btn2Next').disabled = (absentSet.size === 0);
+    }
+
+    document.getElementById('selectAll').addEventListener('change', function () {
+        var checked = this.checked;
+        allStudents.forEach(function (s) { checked ? setA(s.id) : setP(s.id); });
+    });
+
+    function updateCtr() { document.getElementById('absCtr').textContent = absentSet.size + ' absent(s)'; }
+
+    function fmtDate(d) {
+        if (!d) return '—';
+        var p = d.split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+    }
+
+})();
+</script>

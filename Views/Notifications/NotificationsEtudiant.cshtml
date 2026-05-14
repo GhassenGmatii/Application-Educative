@@ -1,0 +1,545 @@
+﻿@model List<Application_Educative.Models.Notification>
+@{
+    ViewData["Title"] = "Mes Notifications";
+    var absences = ViewBag.Absences as List<Application_Educative.Models.Absence>;
+    int nonLues = Model?.Count(n => !n.Lue) ?? 0;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --orange:       #F97316;
+    --orange-dark:  #C2410C;
+    --orange-light: #FFF7ED;
+    --orange-mid:   #FFEDD5;
+    --red:          #EF4444;
+    --green:        #22C55E;
+    --blue:         #3B82F6;
+    --text:         #1C1917;
+    --muted:        #78716C;
+    --border:       #E7E5E4;
+    --card:         #ffffff;
+    --bg:           #FFF7ED;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    padding: 28px 16px 60px;
+    color: var(--text);
+}
+
+.page-wrap { max-width: 860px; margin: 0 auto; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.page-icon {
+    width: 52px; height: 52px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 1.35rem;
+    box-shadow: 0 4px 16px rgba(249,115,22,.3);
+    position: relative;
+}
+.badge-count {
+    position: absolute;
+    top: -6px; right: -6px;
+    min-width: 20px; height: 20px;
+    border-radius: 50px;
+    background: var(--red);
+    color: white;
+    font-size: .65rem;
+    font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    border: 2px solid var(--bg);
+}
+.page-title h1 {
+    font-size: 1.45rem;
+    font-weight: 900;
+    margin: 0;
+    color: var(--text);
+}
+.page-title p {
+    font-size: .83rem;
+    color: var(--muted);
+    margin: 2px 0 0;
+}
+
+.btn-marquer-tout {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: 2px solid var(--orange);
+    background: transparent;
+    color: var(--orange);
+    font-family: 'Nunito', sans-serif;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s;
+    text-decoration: none;
+}
+.btn-marquer-tout:hover { background: var(--orange-light); }
+
+/* ── TABS ── */
+.tabs {
+    display: flex;
+    gap: 4px;
+    background: white;
+    border-radius: 12px;
+    padding: 5px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    margin-bottom: 22px;
+    width: fit-content;
+}
+.tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Nunito', sans-serif;
+    transition: .18s;
+    display: flex; align-items: center; gap: 7px;
+}
+.tab.active {
+    background: var(--orange);
+    color: white;
+    box-shadow: 0 2px 8px rgba(249,115,22,.3);
+}
+.tab .cnt {
+    background: rgba(255,255,255,.3);
+    color: inherit;
+    border-radius: 50px;
+    padding: 1px 7px;
+    font-size: .72rem;
+}
+.tab:not(.active) .cnt {
+    background: var(--orange-mid);
+    color: var(--orange-dark);
+}
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── NOTIFICATION CARD ── */
+.notif-card {
+    background: white;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color .18s, box-shadow .18s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.notif-card:hover {
+    border-color: var(--orange);
+    box-shadow: 0 4px 16px rgba(249,115,22,.1);
+}
+.notif-card.non-lue {
+    border-color: #FED7AA;
+    background: #FFFBF7;
+}
+.notif-card.non-lue::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--orange);
+    border-radius: 14px 0 0 14px;
+}
+
+.notif-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.notif-icon.absence  { background: #FEE2E2; color: var(--red); }
+.notif-icon.justif   { background: #DCFCE7; color: var(--green); }
+.notif-icon.info     { background: #DBEAFE; color: var(--blue); }
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-msg {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.45;
+    margin-bottom: 4px;
+}
+.notif-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .76rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+}
+.notif-meta i { font-size: .7rem; }
+
+.dot-non-lue {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--orange);
+    flex-shrink: 0;
+    margin-top: 5px;
+    box-shadow: 0 0 0 3px rgba(249,115,22,.18);
+}
+
+/* ── ABSENCE TABLE ── */
+.absence-section-title {
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+}
+.absence-section-title::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: var(--border);
+}
+
+.absence-card {
+    background: white;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: box-shadow .18s;
+}
+.absence-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+
+.absence-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+}
+
+.absence-num {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: var(--orange-mid);
+    color: var(--orange-dark);
+    font-size: .85rem;
+    font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.absence-matiere {
+    font-weight: 700;
+    font-size: .92rem;
+    color: var(--text);
+}
+.absence-section-info {
+    font-size: .76rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.absence-date {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.absence-heure {
+    font-size: .76rem;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.badge-statut {
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: .74rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.badge-non-just { background: #FEE2E2; color: #991B1B; }
+.badge-just     { background: #DCFCE7; color: #14532D; }
+
+/* ── STATS ROW ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+}
+.stat-card {
+    background: white;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    padding: 16px;
+    text-align: center;
+}
+.stat-card .num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.stat-card .lbl {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.stat-card.total .num { color: var(--orange); }
+.stat-card.njust .num { color: var(--red); }
+.stat-card.just  .num { color: var(--green); }
+
+/* ── EMPTY STATE ── */
+.empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+}
+.empty i { font-size: 2.8rem; opacity: .25; display: block; margin-bottom: 12px; }
+.empty p { font-size: .9rem; }
+
+/* ── RESPONSIVE ── */
+@@media (max-width: 600px) {
+    .absence-row { grid-template-columns: 38px 1fr auto; }
+    .absence-date-col { display: none; }
+    .stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+
+<div class="page-wrap">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="page-title">
+            <div class="page-icon">
+                <i class="fas fa-bell"></i>
+                @if (nonLues > 0)
+                {
+                    <span class="badge-count">@(nonLues > 9 ? "9+" : nonLues.ToString())</span>
+                }
+            </div>
+            <div>
+                <h1>Mes Notifications</h1>
+                <p>@nonLues notification(s) non lue(s)</p>
+            </div>
+        </div>
+        @if (nonLues > 0)
+        {
+            <form method="post" action="/Notification/MarquerToutLu" style="margin:0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-marquer-tout">
+                    <i class="fas fa-check-double"></i> Tout marquer comme lu
+                </button>
+            </form>
+        }
+    </div>
+
+    <!-- STATS ABSENCES -->
+    @{
+        int totalAbs = absences?.Count ?? 0;
+        int justAbs  = absences?.Count(a => a.Justifiee) ?? 0;
+        int njustAbs = totalAbs - justAbs;
+    }
+    <div class="stats-row">
+        <div class="stat-card total">
+            <div class="num">@totalAbs</div>
+            <div class="lbl">Total absences</div>
+        </div>
+        <div class="stat-card njust">
+            <div class="num">@njustAbs</div>
+            <div class="lbl">Non justifiées</div>
+        </div>
+        <div class="stat-card just">
+            <div class="num">@justAbs</div>
+            <div class="lbl">Justifiées</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('notifs', this)">
+            <i class="fas fa-bell"></i> Notifications
+            <span class="cnt">@(Model?.Count ?? 0)</span>
+        </button>
+        <button class="tab" onclick="showTab('absences', this)">
+            <i class="fas fa-calendar-times"></i> Mes absences
+            <span class="cnt">@totalAbs</span>
+        </button>
+    </div>
+
+    <!-- ── PANEL NOTIFICATIONS ── -->
+    <div id="panel-notifs" class="panel active">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty">
+                <i class="fas fa-bell-slash"></i>
+                <p>Aucune notification pour le moment.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var n in Model.OrderByDescending(x => x.DateCreation))
+            {
+                string iconClass = n.Type switch {
+                    "absence"       => "absence",
+                    "justification" => "justif",
+                    _               => "info"
+                };
+                string iconName = n.Type switch {
+                    "absence"       => "fa-exclamation-triangle",
+                    "justification" => "fa-check-circle",
+                    _               => "fa-info-circle"
+                };
+
+                <div class="notif-card @(n.Lue ? "" : "non-lue")"
+                     onclick="marquerLue(@n.Id, this)">
+                    <div class="notif-icon @iconClass">
+                        <i class="fas @iconName"></i>
+                    </div>
+                    <div class="notif-body">
+                        <div class="notif-msg">@n.Message</div>
+                        <div class="notif-meta">
+                            <span><i class="fas fa-clock"></i> @n.DateCreation.ToString("dd/MM/yyyy à HH:mm")</span>
+                            @if (!n.Lue)
+                            {
+                                <span style="color:var(--orange);font-weight:700">● Non lue</span>
+                            }
+                            else
+                            {
+                                <span style="color:var(--green)">✓ Lue</span>
+                            }
+                        </div>
+                    </div>
+                    @if (!n.Lue)
+                    {
+                        <div class="dot-non-lue"></div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <!-- ── PANEL ABSENCES ── -->
+    <div id="panel-absences" class="panel">
+        @if (absences == null || !absences.Any())
+        {
+            <div class="empty">
+                <i class="fas fa-calendar-check"></i>
+                <p>Aucune absence enregistrée.</p>
+            </div>
+        }
+        else
+        {
+            <p class="absence-section-title"><i class="fas fa-list"></i> Détail de toutes mes absences</p>
+            int idx = 1;
+            @foreach (var a in absences.OrderByDescending(x => x.DateAbsence))
+            {
+                <div class="absence-card">
+                    <div class="absence-row">
+                        <div class="absence-num">@idx</div>
+                        <div>
+                            <div class="absence-matiere">@(a.Matiere?.Nom ?? "—")</div>
+                            <div class="absence-section-info">
+                                <i class="fas fa-layer-group" style="font-size:.65rem"></i>
+                                @(a.Section?.Nom ?? "—") &nbsp;·&nbsp;
+                                Prof. @(a.Professeur?.LastName ?? "—")
+                            </div>
+                        </div>
+                        <div class="absence-date-col">
+                            <div class="absence-date">
+                                <i class="fas fa-calendar" style="color:var(--orange);font-size:.8rem"></i>
+                                @a.DateAbsence.ToString("dd/MM/yyyy")
+                            </div>
+                            <div class="absence-heure">
+                                Saisie le @a.DateSaisie.ToString("dd/MM/yyyy")
+                            </div>
+                        </div>
+                        <div>
+                            <span class="badge-statut @(a.Justifiee ? "badge-just" : "badge-non-just")">
+                                @(a.Justifiee ? "✓ Justifiée" : "✗ Non justifiée")
+                            </span>
+                            @if (!string.IsNullOrWhiteSpace(a.Commentaire))
+                            {
+                                <div style="font-size:.72rem;color:var(--muted);margin-top:4px;max-width:160px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap"
+                                     title="@a.Commentaire">
+                                    <i class="fas fa-comment" style="font-size:.65rem"></i> @a.Commentaire
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                idx++;
+            }
+        }
+    </div>
+
+</div><!-- /.page-wrap -->
+
+<script>
+function showTab(name, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+function marquerLue(id, card) {
+    if (!card.classList.contains('non-lue')) return;
+    fetch('/Notification/MarquerLue/' + id, {
+        method: 'POST',
+        headers: {
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '',
+            'Content-Type': 'application/json'
+        }
+    }).then(r => {
+        if (r.ok) {
+            card.classList.remove('non-lue');
+            const dot = card.querySelector('.dot-non-lue');
+            if (dot) dot.remove();
+            const meta = card.querySelector('.notif-meta span[style*="orange"]');
+            if (meta) meta.outerHTML = '<span style="color:var(--green)">✓ Lue</span>';
+            // Mise à jour badge
+            const badge = document.querySelector('.badge-count');
+            if (badge) {
+                let cnt = parseInt(badge.textContent) - 1;
+                if (cnt <= 0) badge.remove();
+                else badge.textContent = cnt > 9 ? '9+' : cnt;
+            }
+        }
+    });
+}
+</script>

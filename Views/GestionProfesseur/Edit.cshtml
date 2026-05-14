@@ -1,0 +1,312 @@
+﻿@model Application_Educative.Models.Professeur
+@{ ViewData["Title"] = "Modifier Professeur"; }
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        background-color: #f4f6fb;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .edit-card {
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        overflow: hidden;
+        max-width: 680px;
+        margin: 40px auto;
+    }
+
+    .edit-header {
+        background: linear-gradient(135deg, #e65c00, #ffc107);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .edit-header h3 { font-weight: 800; }
+
+    .edit-body {
+        padding: 35px;
+        background: white;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #444;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .form-label i { color: #e65c00; }
+
+    .form-control,
+    .form-select {
+        border-radius: 11px;
+        border: 1.5px solid #e8eaf2;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: #fafbfd;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 3px rgba(255,193,7,0.18);
+        background-color: #fff;
+        outline: none;
+    }
+
+    /* Password toggle */
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .form-control { padding-right: 42px; }
+    .pw-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #b0b7cc;
+        cursor: pointer;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+    .pw-toggle:hover { color: #e65c00; }
+
+    .btn-save {
+        background: linear-gradient(135deg, #e65c00, #ffc107);
+        color: white;
+        border: none;
+        border-radius: 11px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 15px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        width: 100%;
+        transition: all 0.2s;
+        box-shadow: 0 4px 14px rgba(230,92,0,0.3);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(230,92,0,0.45);
+        color: white;
+    }
+
+    .btn-cancel {
+        border-radius: 11px;
+        padding: 12px 30px;
+        font-weight: 700;
+        font-size: 15px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        width: 100%;
+        border: 1.5px solid #e8eaf2;
+        color: #7a8299;
+        background: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s;
+    }
+
+    .btn-cancel:hover {
+        background: #f4f6fb;
+        border-color: #d0d3e0;
+        color: #3d4461;
+    }
+
+    .info-box {
+        background: #fff8f0;
+        border: 1px solid #ffe0b2;
+        border-radius: 11px;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #b35900;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .swal-orange-progress { background: linear-gradient(135deg, #e65c00, #ffc107) !important; }
+</style>
+
+<div class="container">
+    <div class="edit-card">
+
+        <!-- Header -->
+        <div class="edit-header">
+            <i class="fas fa-user-edit fa-3x mb-2"></i>
+            <h3 class="mb-0">Modifier Professeur</h3>
+            <p class="mb-0 mt-1" style="opacity:0.85;">@Model.FirstName @Model.LastName</p>
+        </div>
+
+        <!-- Body -->
+        <div class="edit-body">
+
+            @if (TempData["Success"] != null)
+            {
+                <div id="triggerSuccess"
+                     data-msg="@TempData["Success"]"
+                     data-nom="@Model.FirstName @Model.LastName"></div>
+            }
+
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+            {
+                var errors = ViewData.ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                <div id="triggerError" data-msg="@string.Join("|", errors)"></div>
+            }
+
+            <div class="info-box">
+                <i class="fas fa-circle-info"></i>
+                Laissez le <strong>&nbsp;mot de passe vide&nbsp;</strong> pour ne pas le modifier.
+            </div>
+
+            <form method="post" action="/GestionProfesseur/Edit/@Model.Id" id="editForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <!-- Nom / Prénom -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-user"></i> Prénom</label>
+                        <input type="text" name="professeur.FirstName" value="@Model.FirstName" class="form-control" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-user"></i> Nom</label>
+                        <input type="text" name="professeur.LastName" value="@Model.LastName" class="form-control" required />
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" name="professeur.Email" value="@Model.Email" class="form-control" required />
+                </div>
+
+                <!-- Téléphone -->
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-phone"></i> Téléphone</label>
+                    <input type="tel" name="professeur.Telephone" value="@Model.Telephone" class="form-control" placeholder="+216 XX XXX XXX" />
+                </div>
+
+                <!-- Mot de passe -->
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-lock"></i> Nouveau mot de passe</label>
+                    <div class="input-icon-wrap">
+                        <input type="password" id="pw1" name="nouveauMotDePasse" class="form-control"
+                               placeholder="Laisser vide = pas de changement" />
+                        <button type="button" class="pw-toggle" onclick="togglePw('pw1',this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Spécialité -->
+                <div class="mb-4">
+                    <label class="form-label"><i class="fas fa-graduation-cap"></i> Spécialité</label>
+                    <input type="text" name="professeur.Specialite" value="@Model.Specialite" class="form-control"
+                           placeholder="Ex: Informatique, Mathématiques..." required />
+                </div>
+
+                <!-- Boutons -->
+                <div class="d-flex gap-3">
+                    <a href="/GestionProfesseur/Index" class="btn-cancel">
+                        <i class="fas fa-arrow-left"></i> Annuler
+                    </a>
+                    <button type="button" class="btn btn-save" id="btnSave">
+                        <i class="fas fa-save me-1"></i>Enregistrer
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    /* ── Password toggle ── */
+    function togglePw(id, btn) {
+        const input = document.getElementById(id);
+        const icon  = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    /* ── Popup succès → redirection automatique vers liste ── */
+    const successEl = document.getElementById("triggerSuccess");
+    if (successEl) {
+        Swal.fire({
+            icon: "success",
+            title: "Modifications enregistrées !",
+            html: `Les informations de <strong>${successEl.dataset.nom}</strong> ont été mises à jour.`,
+            confirmButtonText: '<i class="fas fa-list"></i>&nbsp; Voir la liste',
+            confirmButtonColor: "#e65c00",
+            background: "#fff",
+            iconColor: "#ffc107",
+            timer: 5000,
+            timerProgressBar: true,
+            customClass: { timerProgressBar: 'swal-orange-progress' }
+        }).then(() => {
+            window.location.href = "/GestionProfesseur/Index";
+        });
+    }
+
+    /* ── Erreurs de saisie ── */
+    const errorEl = document.getElementById("triggerError");
+    if (errorEl) {
+        const msgs     = errorEl.dataset.msg.split("|").filter(m => m.trim() !== "");
+        const htmlList = "<ul style='text-align:left;margin-top:10px'>"
+            + msgs.map(m => `<li>${m}</li>`).join("") + "</ul>";
+        Swal.fire({
+            icon: "error",
+            title: "Erreur de saisie",
+            html: "Veuillez corriger les erreurs suivantes :" + htmlList,
+            confirmButtonText: "Corriger",
+            confirmButtonColor: "#e53935",
+            background: "#fff",
+            iconColor: "#e53935"
+        });
+    }
+
+    /* ── Confirmation avant soumission ── */
+    document.getElementById('btnSave').addEventListener('click', function () {
+        const prenom = document.querySelector("[name='professeur.FirstName']").value.trim();
+        const nom    = document.querySelector("[name='professeur.LastName']").value.trim();
+
+        Swal.fire({
+            icon: "question",
+            title: "Confirmer la modification",
+            html: `Voulez-vous enregistrer les modifications de <br><strong>${prenom} ${nom}</strong> ?`,
+            confirmButtonText: '<i class="fas fa-check"></i>&nbsp; Oui, enregistrer',
+            cancelButtonText:  '<i class="fas fa-times"></i>&nbsp; Annuler',
+            showCancelButton: true,
+            confirmButtonColor: "#e65c00",
+            cancelButtonColor: "#6c757d",
+            background: "#fff",
+            iconColor: "#ffc107"
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('editForm').submit();
+        });
+    });
+</script>

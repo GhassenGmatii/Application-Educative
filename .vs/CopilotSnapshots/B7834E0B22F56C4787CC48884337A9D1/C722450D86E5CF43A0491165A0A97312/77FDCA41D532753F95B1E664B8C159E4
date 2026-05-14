@@ -1,0 +1,24 @@
+﻿
+@model IEnumerable<string>
+
+@{
+    ViewData["Title"] = "Gestion Étudiants";
+}
+
+<div>
+    <h2>Gestion Étudiants</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <p>Aucune section disponible</p>
+    }
+    else
+    {
+        <ul>
+        @foreach (var s in Model)
+        {
+            <li>@s</li>
+        }
+        </ul>
+    }
+</div>

@@ -1,0 +1,118 @@
+﻿using Application_Educative.Data;
+using Application_Educative.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BCrypt.Net;
+
+namespace Application_Educative.Controllers
+{
+    public class AdminController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public AdminController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET: /Admin/Login
+        [HttpGet]
+        public IActionResult Login()
+        {
+            System.Diagnostics.Debug.WriteLine("DEBUG: GET Login appelé");
+            return View("~/Views/Account/Login.cshtml");
+        }
+
+        // POST: /Admin/Login
+        [HttpPost]
+        
+        public async Task<IActionResult> Login(string username, string password, string? returnUrl)
+        {
+            System.Diagnostics.Debug.WriteLine($"DEBUG: POST Login reçu");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Username: {username}");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Password length: {password?.Length}");
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                System.Diagnostics.Debug.WriteLine("DEBUG: Username ou password vide");
+                ModelState.AddModelError("", "Nom d'utilisateur et mot de passe sont obligatoires.");
+                return View("~/Views/Account/Login.cshtml");
+            }
+
+            try
+            {
+                // Compter les admins en base
+                var adminCount = _context.Admins.Count();
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Nombre d'admins en base: {adminCount}");
+
+                // Chercher l'admin dans la DB
+                var admin = _context.Admins.FirstOrDefault(a => a.Username == username);
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Admin trouvé: {admin != null}");
+
+                // TEST SIMPLE - Comparaison en texte brut (SANS BCrypt)
+                if (admin != null && !string.IsNullOrEmpty(admin.Password))
+                {
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Vérification du mot de passe...");
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Password reçu: {password}");
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Password en base: {admin.Password}");
+
+                    // TEST SIMPLE - Comparer directement
+                    bool passwordMatch = password == admin.Password;
+                    if (passwordMatch)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"DEBUG: Connexion réussie pour {admin.Username}");
+
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, admin.Username),
+                            new Claim("AdminId", admin.Id.ToString())
+                        };
+
+                        var identity = new ClaimsIdentity(
+                            claims,
+                            CookieAuthenticationDefaults.AuthenticationScheme);
+                        var principal = new ClaimsPrincipal(identity);
+
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            principal);
+
+                        System.Diagnostics.Debug.WriteLine($"DEBUG: SignInAsync terminé");
+
+                        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl);
+                        }
+
+                        return RedirectToAction("Index", "Home");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Erreur de login - admin introuvable ou mot de passe incorrect");
+                ModelState.AddModelError("", "Nom d'utilisateur ou mot de passe incorrect");
+                return View("~/Views/Account/Login.cshtml");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Exception: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"DEBUG: StackTrace: {ex.StackTrace}");
+                ModelState.AddModelError("", $"Une erreur s'est produite : {ex.Message}");
+                return View("~/Views/Account/Login.cshtml");
+            }
+        }
+
+        // GET: /Admin/Logout
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            System.Diagnostics.Debug.WriteLine("DEBUG: Logout appelé");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+    }
+}

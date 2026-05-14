@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>@ViewData["Title"] - Application Éducative</title>
+
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+    <link href="~/css/sb-admin-2.min.css" rel="stylesheet" />
+
+    <!-- ✅ FIX COMPLET SIDEBAR -->
+    <style>
+            html, body {
+                height: 100%;
+            }
+
+            #wrapper {
+                height: 100%;
+            }
+
+            .sidebar {
+                height: 100vh !important;
+                overflow-y: auto !important;
+                position: fixed; /* empêche coupure */
+            }
+
+            #content-wrapper {
+                margin-left: 224px; /* largeur sidebar SB Admin */
+                width: 100%;
+            }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+
+        <!-- SIDEBAR -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Home/Index">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">APPRENTI INSTRUIT</div>
+            </a>
+
+            <hr class="sidebar-divider my-0" />
+
+            <li class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                <a class="nav-link" href="/Home/Index">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Tableau de bord</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider" />
+            <div class="sidebar-heading">Administration</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionAdmin/Create">
+                    <i class="fas fa-fw fa-user-plus"></i>
+                    <span>Ajouter Administrateur</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionAdmin/Index">
+                    <i class="fas fa-fw fa-list"></i>
+                    <span>Liste Administrateurs</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider" />
+            <div class="sidebar-heading">Enseignement</div>
+
+            <!-- ✅ PROF -->
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionProfesseur/Create">
+                    <i class="fas fa-fw fa-user-plus"></i>
+                    <span>Ajouter Professeur</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionProfesseur/Index">
+                    <i class="fas fa-fw fa-chalkboard-teacher"></i>
+                    <span>Liste Professeurs</span>
+                </a>
+            </li>
+
+            <!-- ✅ ETUDIANT -->
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionEtudiant/Create">
+                    <i class="fas fa-fw fa-user-plus"></i>
+                    <span>Ajouter Étudiant</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/GestionEtudiant/Index">
+                    <i class="fas fa-fw fa-user-graduate"></i>
+                    <span>Liste Étudiants</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider" />
+            <div class="sidebar-heading">Absences</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-fw fa-calendar-times"></i>
+                    <span>Absences</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-fw fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider d-none d-md-block" />
+        </ul>
+        <!-- END SIDEBAR -->
+        <!-- CONTENT -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <span class="mr-2 text-gray-600 small">
+                                <i class="fas fa-user-circle mr-1"></i>
+                                @(User.Identity?.Name ?? "Admin")
+                            </span>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+
+            <footer class="footer bg-white text-center p-3">
+                <span>© @DateTime.Now.Year Application Éducative</span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/vendor/jquery/jquery.min.js"></script>
+    <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/js/sb-admin-2.min.js"></script>
+</body>
+</html>

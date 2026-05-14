@@ -1,0 +1,212 @@
+﻿@using Application_Educative.Models
+@model Etudiant
+
+@{
+    ViewData["Title"] = "Modifier un Étudiant";
+}
+@model Etudiant
+
+@{
+    ViewData["Title"] = "Modifier un Étudiant";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>✏️ Modifier l'Étudiant : <strong>@Model.Nom @Model.Prenom</strong></h2>
+
+            <form id="formEditEtudiant" enctype="multipart/form-data">
+                <input type="hidden" name="etudiantId" value="@Model.EtudiantId" />
+
+                <div class="form-group mb-3">
+                    <label for="nom" class="form-label">Nom *</label>
+                    <input type="text" class="form-control" id="nom" name="nom" value="@Model.Nom" required />
+                    <small class="text-danger" id="nomError"></small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="prenom" class="form-label">Prénom *</label>
+                    <input type="text" class="form-control" id="prenom" name="prenom" value="@Model.Prenom" required />
+                    <small class="text-danger" id="prenomError"></small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="etat" class="form-label">État *</label>
+                    <select class="form-control" id="etat" name="etat" required>
+                        <option value="Admis" @(Model.Etat == "Admis" ? "selected" : "")>Admis</option>
+                        <option value="Redoublant" @(Model.Etat == "Redoublant" ? "selected" : "")>Redoublant</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="tranche" class="form-label">Tranche *</label>
+                    <select class="form-control" id="tranche" name="tranche" required>
+                        <option value="1ère Tranche" @(Model.Tranche == "1ère Tranche" ? "selected" : "")>1ère Tranche</option>
+                        <option value="2ème Tranche" @(Model.Tranche == "2ème Tranche" ? "selected" : "")>2ème Tranche</option>
+                        <option value="3ème Tranche" @(Model.Tranche == "3ème Tranche" ? "selected" : "")>3ème Tranche</option>
+                        <option value="Totalité" @(Model.Tranche == "Totalité" ? "selected" : "")>Totalité Payée</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="section" class="form-label">Section *</label>
+                    <select class="form-control" id="section" name="section" required>
+                        <option value="1ère Année Cycle Ing" @(Model.Section == "1ère Année Cycle Ing" ? "selected" : "")>1ère Année Cycle Ing</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="specialite" class="form-label">Spécialité *</label>
+                    <select class="form-control" id="specialite" name="specialite" required>
+                        <option value="DevOps" @(Model.Specialite == "DevOps" ? "selected" : "")>DevOps</option>
+                        <option value="GL" @(Model.Specialite == "GL" ? "selected" : "")>GL (Génie Logiciel)</option>
+                        <option value="BI" @(Model.Specialite == "BI" ? "selected" : "")>BI (Business Intelligence)</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="motDePasse" class="form-label">Mot de Passe *</label>
+                    <input type="password" class="form-control" id="motDePasse" name="motDePasse" value="@Model.MotDePasse" required />
+                    <small class="text-danger" id="mpError"></small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="imageFile" class="form-label">Changer la Photo</label>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="mb-2">
+                            <img src="@Model.ImageUrl" alt="Photo actuelle" style="width:100px;height:100px;border-radius:8px;" />
+                            <p class="text-muted small">Photo actuelle</p>
+                        </div>
+                    }
+                    <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" />
+                    <small class="text-muted">Laissez vide pour garder la photo actuelle</small>
+                    <small class="text-danger" id="imageError"></small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <p class="text-muted"><strong>Date de création :</strong> @Model.DateCreation.ToString("dd/MM/yyyy HH:mm")</p>
+                    @if (Model.DateModification.HasValue)
+                    {
+                        <p class="text-muted"><strong>Dernière modification :</strong> @Model.DateModification.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="fas fa-save"></i> Mettre à Jour
+                    </button>
+                    <a href="/GestionEtudiant/Index" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Succès -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">✅ Succès</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Étudiant modifié avec succès !</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="location.href='/GestionEtudiant/Index'">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Erreur -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">❌ Erreur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="errorList"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('formEditEtudiant').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const nom = document.getElementById('nom').value.trim();
+        const prenom = document.getElementById('prenom').value.trim();
+        const motDePasse = document.getElementById('motDePasse').value;
+        const etudiantId = document.querySelector('input[name="etudiantId"]').value;
+        const imageFile = document.getElementById('imageFile').files[0];
+
+        // Réinitialiser erreurs
+        document.getElementById('nomError').textContent = '';
+        document.getElementById('prenomError').textContent = '';
+        document.getElementById('mpError').textContent = '';
+        document.getElementById('imageError').textContent = '';
+
+        let hasError = false;
+
+        // Validation
+        if (!/^[a-zA-ZÀ-ÿ\s'-]+$/.test(nom)) {
+            document.getElementById('nomError').textContent = 'Le nom doit contenir uniquement des lettres';
+            hasError = true;
+        }
+
+        if (!/^[a-zA-ZÀ-ÿ\s'-]+$/.test(prenom)) {
+            document.getElementById('prenomError').textContent = 'Le prénom doit contenir uniquement des lettres';
+            hasError = true;
+        }
+
+        if (motDePasse.length < 6) {
+            document.getElementById('mpError').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+            hasError = true;
+        }
+
+        if (imageFile && imageFile.size > 5 * 1024 * 1024) {
+            document.getElementById('imageError').textContent = 'L\'image dépasse 5MB';
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+
+        const formData = new FormData(document.getElementById('formEditEtudiant'));
+
+        try {
+            const response = await fetch(`/GestionEtudiant/Edit/${etudiantId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+            } else {
+                document.getElementById('errorList').innerHTML = data.errors
+                    .map(err => `<li>${err}</li>`)
+                    .join('');
+                new bootstrap.Modal(document.getElementById('errorModal')).show();
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Erreur lors de l\'envoi');
+        }
+    });
+</script>

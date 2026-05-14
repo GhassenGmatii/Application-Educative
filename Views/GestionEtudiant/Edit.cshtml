@@ -1,0 +1,140 @@
+﻿@model Application_Educative.Models.Etudiant
+@{ ViewData["Title"] = "Modifier Étudiant"; }
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    body { background-color: #f0f4f8; }
+    .edit-card { border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); overflow: hidden; max-width: 650px; margin: 40px auto; }
+    .edit-header { background: linear-gradient(135deg, #ffc107, #e65c00); color: white; padding: 30px; text-align: center; }
+    .edit-body { padding: 35px; background: white; }
+    .form-label { font-weight: 600; color: #444; }
+    .form-control, .form-select { border-radius: 10px; border: 2px solid #dee2e6; padding: 11px 15px; }
+    .form-control:focus, .form-select:focus { border-color: #ffc107; box-shadow: 0 0 0 0.2rem rgba(255,193,7,0.2); }
+    .btn-save { background: linear-gradient(135deg, #ffc107, #e65c00); color: white; border: none; border-radius: 10px; padding: 12px 30px; font-weight: 600; width: 100%; font-size: 16px; transition: all 0.2s; }
+    .btn-save:hover { transform: translateY(-2px); color: white; }
+    .btn-cancel { border-radius: 10px; padding: 12px 30px; font-weight: 600; width: 100%; font-size: 16px; }
+</style>
+
+<div class="container">
+    <div class="edit-card">
+        <div class="edit-header">
+            <i class="fas fa-user-edit fa-3x mb-2"></i>
+            <h3 class="mb-0">Modifier Étudiant</h3>
+            <p class="mb-0 opacity-75 mt-1">@Model.Prenom @Model.Nom</p>
+        </div>
+        <div class="edit-body">
+
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                Laissez le <strong>mot de passe vide</strong> pour ne pas le modifier.
+            </div>
+
+            <form method="post" action="/GestionEtudiant/Edit/@Model.EtudiantId" id="editForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.EtudiantId" />
+                <input type="hidden" name="etudiant.EtudiantId" value="@Model.EtudiantId" />
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-user me-1 text-warning"></i>Prénom</label>
+                        <input type="text" name="etudiant.Prenom" value="@Model.Prenom" class="form-control" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-user me-1 text-warning"></i>Nom</label>
+                        <input type="text" name="etudiant.Nom" value="@Model.Nom" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-envelope me-1 text-warning"></i>Email</label>
+                    <input type="email" name="etudiant.Email" value="@Model.Email" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-lock me-1 text-warning"></i>Nouveau mot de passe</label>
+                    <input type="password" name="nouveauMotDePasse" class="form-control"
+                           placeholder="Laisser vide = pas de changement" />
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-layer-group me-1 text-warning"></i>Section</label>
+                        <select name="etudiant.Section" class="form-select">
+                            <option @(Model.Section == "1ère Année Cycle Ing" ? "selected" : "")>1ère Année Cycle Ing</option>
+                            <option @(Model.Section == "2ème Année Cycle Ing" ? "selected" : "")>2ème Année Cycle Ing</option>
+                            <option @(Model.Section == "3ème Année Cycle Ing" ? "selected" : "")>3ème Année Cycle Ing</option>
+                            <option @(Model.Section == "1ère Année Licence" ? "selected" : "")>1ère Année Licence</option>
+                            <option @(Model.Section == "2ème Année Licence" ? "selected" : "")>2ème Année Licence</option>
+                            <option @(Model.Section == "3ème Année Licence" ? "selected" : "")>3ème Année Licence</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-tag me-1 text-warning"></i>Spécialité</label>
+                        <select name="etudiant.Specialite" class="form-select">
+                            <option @(Model.Specialite == "DevOps" ? "selected" : "")>DevOps</option>
+                            <option @(Model.Specialite == "GL" ? "selected" : "")>GL</option>
+                            <option @(Model.Specialite == "BI" ? "selected" : "")>BI</option>
+                            <option @(Model.Specialite == "Réseaux" ? "selected" : "")>Réseaux</option>
+                            <option @(Model.Specialite == "Sécurité" ? "selected" : "")>Sécurité</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label class="form-label"><i class="fas fa-info-circle me-1 text-warning"></i>État</label>
+                        <select name="etudiant.Etat" class="form-select">
+                            <option @(Model.Etat == "Admis" ? "selected" : "")>Admis</option>
+                            <option @(Model.Etat == "Redoublant" ? "selected" : "")>Redoublant</option>
+                        </select>
+                    </div>
+                    
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="/GestionEtudiant/Index" class="btn btn-outline-secondary btn-cancel">
+                        <i class="fas fa-arrow-left me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-save" id="btnSave">
+                        <i class="fas fa-save me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmation -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+            <div class="modal-header border-0" style="background:linear-gradient(135deg,#ffc107,#e65c00);">
+                <h5 class="modal-title text-white"><i class="fas fa-question-circle me-2"></i>Confirmer</h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-user-edit fa-3x text-warning mb-3"></i>
+                <p class="fs-5 fw-bold">Voulez-vous enregistrer les modifications ?</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-3 pb-4">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="btnConfirm" class="btn text-white px-4"
+                        style="background:linear-gradient(135deg,#ffc107,#e65c00);">
+                    <i class="fas fa-check me-1"></i>Oui, enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('btnSave').addEventListener('click', e => {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    });
+    document.getElementById('btnConfirm').addEventListener('click', () => {
+        document.getElementById('editForm').submit();
+    });
+</script>

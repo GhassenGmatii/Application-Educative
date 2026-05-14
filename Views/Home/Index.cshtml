@@ -1,0 +1,371 @@
+@{
+    ViewData["Title"] = "Tableau de bord Admin";
+    var absByMatiere = ViewBag.AbsByMatiere as dynamic;
+    var topAbsents   = ViewBag.TopAbsents   as dynamic;
+    var dernAbs      = ViewBag.DerniersAbsences as List<Application_Educative.Models.Absence>;
+    int[] moisData   = ViewBag.AbsByMois    as int[] ?? new int[12];
+    string[] moisLbl = ViewBag.MoisLabels   as string[] ?? new string[12];
+}
+<style>
+:root{--or:#F97316;--ord:#EA580C;--orl:#FFF7ED;--re:#EF4444;--gr:#22C55E;--bl:#3B82F6;--pu:#8B5CF6;--yw:#EAB308;--sh:0 2px 12px rgba(0,0,0,.07);}
+*{box-sizing:border-box;}
+.db-wrap{padding:0;}
+/* ── HEADER ── */
+.db-header{background:linear-gradient(135deg,#1E293B 0%,#0F172A 100%);padding:1.8rem 2rem 4rem;position:relative;overflow:hidden;}
+.db-header::before{content:'';position:absolute;top:-60px;right:-60px;width:250px;height:250px;border-radius:50%;background:rgba(249,115,22,.12);}
+.db-header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:40px;background:#F3F4F6;border-radius:40px 40px 0 0;}
+.db-header h1{color:#fff;font-size:1.6rem;font-weight:800;display:flex;align-items:center;gap:.6rem;position:relative;}
+.db-header p{color:rgba(255,255,255,.65);font-size:.88rem;margin-top:.3rem;position:relative;}
+.db-header .live{display:inline-flex;align-items:center;gap:.4rem;background:rgba(34,197,94,.2);color:#4ADE80;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(34,197,94,.3);}
+.db-header .live span{width:6px;height:6px;border-radius:50%;background:#4ADE80;animation:pulse 1.5s infinite;}
+@@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── GRID KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;padding:0 1.5rem;margin-top:-2rem;position:relative;z-index:10;}
+.kpi{background:#fff;border-radius:16px;padding:1.2rem 1rem;box-shadow:var(--sh);display:flex;flex-direction:column;gap:.4rem;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.or::after{background:linear-gradient(90deg,var(--or),var(--ord));}
+.kpi.bl::after{background:linear-gradient(90deg,#3B82F6,#6366F1);}
+.kpi.gr::after{background:linear-gradient(90deg,var(--gr),#16A34A);}
+.kpi.pu::after{background:linear-gradient(90deg,var(--pu),#7C3AED);}
+.kpi.re::after{background:linear-gradient(90deg,var(--re),#DC2626);}
+.kpi.yw::after{background:linear-gradient(90deg,var(--yw),#CA8A04);}
+.kpi.cy::after{background:linear-gradient(90deg,#06B6D4,#0284C7);}
+.kpi.pk::after{background:linear-gradient(90deg,#EC4899,#BE185D);}
+.kpi-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.kpi.or .kpi-icon{background:#FFF7ED;} .kpi.bl .kpi-icon{background:#EFF6FF;} .kpi.gr .kpi-icon{background:#F0FDF4;}
+.kpi.pu .kpi-icon{background:#F5F3FF;} .kpi.re .kpi-icon{background:#FEF2F2;} .kpi.yw .kpi-icon{background:#FEFCE8;}
+.kpi.cy .kpi-icon{background:#ECFEFF;} .kpi.pk .kpi-icon{background:#FDF2F8;}
+.kpi-val{font-size:2rem;font-weight:900;color:#0F172A;line-height:1;}
+.kpi-label{font-size:.75rem;color:#64748B;font-weight:600;}
+.kpi-trend{font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:.2rem;}
+.trend-up{color:#22C55E;} .trend-down{color:#EF4444;} .trend-neu{color:#94A3B8;}
+/* ── SECTION TITLES ── */
+.section{padding:1.5rem 1.5rem 0;}
+.sec-title{font-size:.8rem;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.07em;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.sec-title::after{content:'';flex:1;height:1px;background:#E2E8F0;}
+/* ── CHARTS ROW ── */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:1rem;padding:0 1.5rem;}
+.chart-card{background:#fff;border-radius:16px;padding:1.2rem;box-shadow:var(--sh);}
+.chart-title{font-size:.85rem;font-weight:700;color:#1E293B;margin-bottom:1rem;}
+/* ── TABLES ── */
+.data-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:0 1.5rem 1.5rem;}
+.table-card{background:#fff;border-radius:16px;padding:1.2rem;box-shadow:var(--sh);}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{text-align:left;padding:.5rem .6rem;color:#64748B;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid #F1F5F9;}
+.tbl td{padding:.55rem .6rem;color:#1E293B;border-bottom:1px solid #F8FAFC;vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#F8FAFC;}
+.rank{width:22px;height:22px;border-radius:50%;background:#F1F5F9;display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:#475569;}
+.rank.g1{background:#FEF3C7;color:#92400E;} .rank.g2{background:#F3F4F6;color:#374151;} .rank.g3{background:#FEF9EE;color:#92400E;}
+.badge{font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;}
+.bj{background:#DCFCE7;color:#15803D;} .bnj{background:#FEE2E2;color:#DC2626;} .borg{background:#FFF7ED;color:#C2410C;}
+/* ── PROGRESS BAR ── */
+.prog-wrap{margin-bottom:.7rem;}
+.prog-label{display:flex;justify-content:space-between;font-size:.76rem;font-weight:600;color:#374151;margin-bottom:.25rem;}
+.prog-bar{height:7px;background:#F1F5F9;border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;transition:width .8s ease;}
+/* ── RECENT ABS ── */
+.abs-item{display:flex;align-items:center;gap:.7rem;padding:.55rem 0;border-bottom:1px solid #F8FAFC;}
+.abs-item:last-child{border-bottom:none;}
+.abs-avatar{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--or),var(--ord));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.75rem;flex-shrink:0;}
+.abs-info{flex:1;min-width:0;}
+.abs-name{font-size:.8rem;font-weight:700;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.abs-meta{font-size:.7rem;color:#94A3B8;}
+/* ── DOUGHNUT ── */
+.doughnut-wrap{display:flex;flex-direction:column;align-items:center;gap:.8rem;}
+.doughnut-legend{width:100%;}
+.legend-item{display:flex;align-items:center;justify-content:space-between;font-size:.76rem;padding:.2rem 0;}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+/* ── ALERT BOX ── */
+.alert-box{background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border:1.5px solid #FED7AA;border-radius:14px;padding:1rem 1.2rem;margin:1rem 1.5rem 0;display:flex;align-items:center;gap:.8rem;}
+.alert-box .ic{font-size:1.5rem;}
+.alert-box .txt{font-size:.82rem;color:#92400E;font-weight:600;}
+.alert-box .val{font-size:1.2rem;font-weight:900;color:#EA580C;}
+/* ── RESPONSIVE ── */
+@@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-row,.data-row{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="db-wrap">
+
+<!-- HEADER -->
+<div class="db-header">
+    <h1>📊 Tableau de bord <span class="live ms-3"><span></span>En ligne</span></h1>
+    <p>Bienvenue, <strong>@ViewBag.Username</strong> — @DateTime.Now.ToString("dddd dd MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</p>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid">
+    <div class="kpi or">
+        <div class="kpi-icon">🎓</div>
+        <div class="kpi-val">@ViewBag.NbEtudiants</div>
+        <div class="kpi-label">Étudiants</div>
+        <div class="kpi-trend trend-neu">👤 inscrits</div>
+    </div>
+    <div class="kpi bl">
+        <div class="kpi-icon">👨‍🏫</div>
+        <div class="kpi-val">@ViewBag.NbProfesseurs</div>
+        <div class="kpi-label">Professeurs</div>
+        <div class="kpi-trend trend-neu">✏️ actifs</div>
+    </div>
+    <div class="kpi gr">
+        <div class="kpi-icon">📚</div>
+        <div class="kpi-val">@ViewBag.NbMatieres</div>
+        <div class="kpi-label">Matières</div>
+        <div class="kpi-trend trend-neu">🏫 @ViewBag.NbSections sections</div>
+    </div>
+    <div class="kpi pu">
+        <div class="kpi-icon">🛡️</div>
+        <div class="kpi-val">@ViewBag.NbAdmins</div>
+        <div class="kpi-label">Administrateurs</div>
+        <div class="kpi-trend trend-neu">⚙️ système</div>
+    </div>
+    <div class="kpi re">
+        <div class="kpi-icon">📅</div>
+        <div class="kpi-val">@ViewBag.NbAbsencesTotal</div>
+        <div class="kpi-label">Total absences</div>
+        <div class="kpi-trend trend-down">❌ @ViewBag.NbAbsencesNonJust non justifiées</div>
+    </div>
+    <div class="kpi gr">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-val">@ViewBag.NbAbsencesJustifiees</div>
+        <div class="kpi-label">Absences justifiées</div>
+        @{
+            int tot = (int)(ViewBag.NbAbsencesTotal ?? 1);
+            int jus = (int)(ViewBag.NbAbsencesJustifiees ?? 0);
+            int pct = tot > 0 ? jus * 100 / tot : 0;
+        }
+        <div class="kpi-trend trend-up">📈 @pct% du total</div>
+    </div>
+    <div class="kpi yw">
+        <div class="kpi-icon">📩</div>
+        <div class="kpi-val">@ViewBag.NbReclamations</div>
+        <div class="kpi-label">Réclamations reçues</div>
+        <div class="kpi-trend trend-down">⏳ @ViewBag.NbReclamationsAttente en attente</div>
+    </div>
+    <div class="kpi cy">
+        <div class="kpi-icon">🔔</div>
+        <div class="kpi-val">@ViewBag.NbNotifsNonLues</div>
+        <div class="kpi-label">Notifs non lues</div>
+        <div class="kpi-trend trend-neu"><a href="/Notification/Index" style="color:inherit;">Voir →</a></div>
+    </div>
+</div>
+
+<!-- ALERTE RÉCLAMATIONS EN ATTENTE -->
+@if ((int)(ViewBag.NbReclamationsAttente ?? 0) > 0)
+{
+    <div class="alert-box">
+        <div class="ic">⚠️</div>
+        <div class="txt">
+            <div class="val">@ViewBag.NbReclamationsAttente réclamation(s)</div>
+            en attente de traitement — <a href="/Notification/Index" style="color:#EA580C;font-weight:700;">Traiter maintenant →</a>
+        </div>
+    </div>
+}
+
+<!-- GRAPHIQUES -->
+<div class="section"><div class="sec-title">📈 Analyse des absences</div></div>
+<div class="charts-row">
+    <!-- Graphique linéaire mensuel -->
+    <div class="chart-card">
+        <div class="chart-title">📅 Absences par mois (12 derniers mois)</div>
+        <canvas id="chartMois" height="90"></canvas>
+    </div>
+    <!-- Doughnut Justifiées / Non justifiées -->
+    <div class="chart-card">
+        <div class="chart-title">🍩 Répartition absences</div>
+        <div class="doughnut-wrap">
+            <canvas id="chartDoughnut" width="180" height="180"></canvas>
+            <div class="doughnut-legend" style="width:100%">
+                <div class="legend-item">
+                    <div style="display:flex;align-items:center;gap:.4rem;">
+                        <div class="legend-dot" style="background:#EF4444;"></div>
+                        <span>Non justifiées</span>
+                    </div>
+                    <strong>@ViewBag.NbAbsencesNonJust</strong>
+                </div>
+                <div class="legend-item">
+                    <div style="display:flex;align-items:center;gap:.4rem;">
+                        <div class="legend-dot" style="background:#22C55E;"></div>
+                        <span>Justifiées</span>
+                    </div>
+                    <strong>@ViewBag.NbAbsencesJustifiees</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BARRES PAR MATIÈRE -->
+<div class="section"><div class="sec-title">📚 Absences par matière</div></div>
+<div style="padding:0 1.5rem;margin-bottom:1rem;">
+    <div class="chart-card">
+        @if (ViewBag.AbsByMatiere != null)
+        {
+            int maxAbs = 1;
+            foreach (var m in ViewBag.AbsByMatiere) { if (m.Count > maxAbs) maxAbs = m.Count; }
+            string[] colors = { "#F97316","#3B82F6","#22C55E","#8B5CF6","#EF4444","#EAB308" };
+            int ci = 0;
+            foreach (var m in ViewBag.AbsByMatiere)
+            {
+                int w = maxAbs > 0 ? (int)(m.Count * 100 / maxAbs) : 0;
+                string col = colors[ci++ % colors.Length];
+                <div class="prog-wrap">
+                    <div class="prog-label">
+                        <span>@m.Matiere</span>
+                        <span style="color:@col;font-weight:900;">@m.Count</span>
+                    </div>
+                    <div class="prog-bar">
+                        <div class="prog-fill" style="width:@w%;background:@col;"></div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p style="color:#94A3B8;font-size:.82rem;">Aucune donnée disponible.</p>
+        }
+    </div>
+</div>
+
+<!-- TABLEAUX DONNÉES -->
+<div class="section"><div class="sec-title">🏆 Classements & Activité récente</div></div>
+<div class="data-row">
+
+    <!-- TOP 5 ABSENTS -->
+    <div class="table-card">
+        <div class="chart-title">🏅 Top 5 étudiants les plus absents</div>
+        @if (ViewBag.TopAbsents != null)
+        {
+            <table class="tbl">
+                <thead><tr><th>#</th><th>Étudiant</th><th>Total</th><th>Non just.</th></tr></thead>
+                <tbody>
+                @{int ri=1;}
+                @foreach (var e in ViewBag.TopAbsents)
+                {
+                    string rankCls = ri==1?"g1":ri==2?"g2":ri==3?"g3":"";
+                    <tr>
+                        <td><span class="rank @rankCls">@ri</span></td>
+                        <td>
+                            <div style="font-weight:700;font-size:.8rem;">@e.Prenom @e.Nom</div>
+                        </td>
+                        <td><span class="badge borg">@e.Count</span></td>
+                        <td><span class="badge @(e.NonJust>0?"bnj":"bj")">@e.NonJust</span></td>
+                    </tr>
+                    ri++;
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="text-align:center;color:#94A3B8;padding:1rem;font-size:.82rem;">Aucune absence enregistrée.</div>
+        }
+    </div>
+
+    <!-- DERNIÈRES ABSENCES -->
+    <div class="table-card">
+        <div class="chart-title">🕐 Absences récentes</div>
+        @if (dernAbs != null && dernAbs.Any())
+        {
+            foreach (var a in dernAbs)
+            {
+                string initiales = ((a.Etudiant?.Prenom ?? "?").Length > 0 ? a.Etudiant!.Prenom[0].ToString() : "?")
+                                 + ((a.Etudiant?.Nom ?? "?").Length > 0 ? a.Etudiant!.Nom[0].ToString() : "?");
+                <div class="abs-item">
+                    <div class="abs-avatar">@initiales.ToUpper()</div>
+                    <div class="abs-info">
+                        <div class="abs-name">@a.Etudiant?.Prenom @a.Etudiant?.Nom</div>
+                        <div class="abs-meta">📚 @a.Matiere?.Nom &nbsp;|&nbsp; 📅 @a.DateAbsence.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <span class="badge @(a.Justifiee?"bj":"bnj")">@(a.Justifiee?"✅":"❌")</span>
+                </div>
+            }
+        }
+        else
+        {
+            <div style="text-align:center;color:#94A3B8;padding:1rem;font-size:.82rem;">Aucune absence récente.</div>
+        }
+    </div>
+
+</div>
+
+<!-- LIENS RAPIDES -->
+<div class="section"><div class="sec-title">⚡ Accès rapide</div></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;padding:0 1.5rem 2rem;">
+    @foreach (var link in new[]{
+        new{href="/GestionEtudiant/Create",icon="🎓",label="Ajouter étudiant",col="#F97316"},
+        new{href="/GestionProfesseur/Create",icon="👨‍🏫",label="Ajouter professeur",col="#3B82F6"},
+        new{href="/Absence/Create",icon="📅",label="Saisir absence",col="#EF4444"},
+        new{href="/Notification/Index",icon="📩",label="Réclamations",col="#8B5CF6"}
+    })
+    {
+        <a href="@link.href" style="background:#fff;border-radius:14px;padding:1rem;box-shadow:var(--sh);text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:.4rem;transition:transform .2s,box-shadow .2s;border-bottom:3px solid @link.col;"
+           onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.12)'"
+           onmouseout="this.style.transform='';this.style.boxShadow='var(--sh)'">
+            <span style="font-size:1.5rem;">@link.icon</span>
+            <span style="font-size:.75rem;font-weight:700;color:#374151;text-align:center;">@link.label</span>
+        </a>
+    }
+</div>
+
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Graphique linéaire mensuel ──────────────────────────────────
+var moisData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(moisData));
+var moisLbls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(moisLbl));
+
+new Chart(document.getElementById('chartMois'), {
+    type: 'line',
+    data: {
+        labels: moisLbls,
+        datasets: [{
+            label: 'Absences',
+            data: moisData,
+            fill: true,
+            backgroundColor: 'rgba(249,115,22,.12)',
+            borderColor: '#F97316',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#F97316',
+            pointRadius: 4,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { precision: 0 } },
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+    }
+});
+
+// ── Doughnut ────────────────────────────────────────────────────
+var nj = @ViewBag.NbAbsencesNonJust;
+var jj = @ViewBag.NbAbsencesJustifiees;
+new Chart(document.getElementById('chartDoughnut'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Non justifiées', 'Justifiées'],
+        datasets: [{
+            data: [nj || 0, jj || 0],
+            backgroundColor: ['#EF4444', '#22C55E'],
+            borderWidth: 0,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: false,
+        cutout: '68%',
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+}

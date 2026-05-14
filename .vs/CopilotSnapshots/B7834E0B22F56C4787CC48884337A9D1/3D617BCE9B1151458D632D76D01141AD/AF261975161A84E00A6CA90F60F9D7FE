@@ -1,0 +1,246 @@
+﻿using Application_Educative.Data;
+using Application_Educative.Models;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Application_Educative.Controllers
+{
+    public class GestionEtudiantController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public GestionEtudiantController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        {
+            _context = context;
+            _webHostEnvironment = webHostEnvironment;
+        }
+
+        // GET: Liste des étudiants par section
+        public IActionResult Index()
+        {
+            var sections = _context.Etudiants
+                .Select(e => e.Section)
+                .Distinct()
+                .ToList();
+
+            return View(sections);
+        }
+
+        // GET: Afficher les étudiants d'une section
+        [HttpGet]
+        public IActionResult ListeParSection(string section)
+        {
+            if (string.IsNullOrEmpty(section))
+                return BadRequest("Section requise");
+
+            var etudiants = _context.Etudiants
+                .Where(e => e.Section == section)
+                .OrderBy(e => e.Nom)
+                .ToList();
+
+            ViewBag.Section = section;
+            return View(etudiants);
+        }
+
+        // GET: Formulaire de création
+        public IActionResult Create()
+        {
+            ViewBag.Etats = new[] { "Admis", "Redoublant" };
+            ViewBag.Sections = new[] { "1ère Année Cycle Ing" };
+            ViewBag.Specialites = new[] { "DevOps", "GL", "BI" };
+            return View();
+        }
+
+        // POST: Créer un nouvel étudiant
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Etudiant etudiant, IFormFile imageFile)
+        {
+            // Validation du nom et prénom (lettres uniquement)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(etudiant.Nom ?? "", @"^[a-zA-ZÀ-ÿ\s'-]+$"))
+            {
+                ModelState.AddModelError("Nom", "Le nom doit contenir uniquement des lettres");
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(etudiant.Prenom ?? "", @"^[a-zA-ZÀ-ÿ\s'-]+$"))
+            {
+                ModelState.AddModelError("Prenom", "Le prénom doit contenir uniquement des lettres");
+            }
+
+            // Validation mot de passe (min 6 caractères)
+            if (string.IsNullOrEmpty(etudiant.MotDePasse) || etudiant.MotDePasse.Length < 6)
+            {
+                ModelState.AddModelError("MotDePasse", "Le mot de passe doit contenir au moins 6 caractères");
+            }
+
+            if (ModelState.IsValid)
+            {
+                // Upload image si fournie
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    try
+                    {
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/etudiants");
+                        Directory.CreateDirectory(uploadsFolder);
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        etudiant.ImageUrl = "/uploads/etudiants/" + uniqueFileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("imageFile", "Erreur lors de l'upload : " + ex.Message);
+                        ViewBag.Etats = new[] { "Admis", "Redoublant" };
+                        ViewBag.Sections = new[] { "1ère Année Cycle Ing" };
+                        ViewBag.Specialites = new[] { "DevOps", "GL", "BI" };
+                        return View(etudiant);
+                    }
+                }
+
+                etudiant.DateCreation = DateTime.Now;
+                _context.Etudiants.Add(etudiant);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Étudiant ajouté avec succès !" });
+            }
+
+            // Retour des erreurs de validation
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return Json(new { success = false, errors = errors });
+        }
+
+        // GET: Formulaire d'édition
+        public IActionResult Edit(int id)
+        {
+            var etudiant = _context.Etudiants.Find(id);
+            if (etudiant == null)
+                return NotFound();
+
+            ViewBag.Etats = new[] { "Admis", "Redoublant" };
+            ViewBag.Sections = new[] { "1ère Année Cycle Ing" };
+            ViewBag.Specialites = new[] { "DevOps", "GL", "BI" };
+            return View(etudiant);
+        }
+
+        // POST: Mettre à jour un étudiant
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Etudiant etudiant, IFormFile imageFile)
+        {
+            if (id != etudiant.EtudiantId)
+                return NotFound();
+
+            var existingEtudiant = _context.Etudiants.Find(id);
+            if (existingEtudiant == null)
+                return NotFound();
+
+            // Validation
+            if (!System.Text.RegularExpressions.Regex.IsMatch(etudiant.Nom ?? "", @"^[a-zA-ZÀ-ÿ\s'-]+$"))
+            {
+                ModelState.AddModelError("Nom", "Le nom doit contenir uniquement des lettres");
+            }
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(etudiant.Prenom ?? "", @"^[a-zA-ZÀ-ÿ\s'-]+$"))
+            {
+                ModelState.AddModelError("Prenom", "Le prénom doit contenir uniquement des lettres");
+            }
+
+            if (string.IsNullOrEmpty(etudiant.MotDePasse) || etudiant.MotDePasse.Length < 6)
+            {
+                ModelState.AddModelError("MotDePasse", "Le mot de passe doit contenir au moins 6 caractères");
+            }
+
+            if (ModelState.IsValid)
+            {
+                // Upload nouvelle image si fournie
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    try
+                    {
+                        // Supprimer l'ancienne image
+                        if (!string.IsNullOrEmpty(existingEtudiant.ImageUrl))
+                        {
+                            string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, existingEtudiant.ImageUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPath))
+                                System.IO.File.Delete(oldPath);
+                        }
+
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/etudiants");
+                        Directory.CreateDirectory(uploadsFolder);
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(fileStream);
+                        }
+
+                        existingEtudiant.ImageUrl = "/uploads/etudiants/" + uniqueFileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("imageFile", "Erreur lors de l'upload : " + ex.Message);
+                        ViewBag.Etats = new[] { "Admis", "Redoublant" };
+                        ViewBag.Sections = new[] { "1ère Année Cycle Ing" };
+                        ViewBag.Specialites = new[] { "DevOps", "GL", "BI" };
+                        return View(etudiant);
+                    }
+                }
+
+                existingEtudiant.Nom = etudiant.Nom;
+                existingEtudiant.Prenom = etudiant.Prenom;
+                existingEtudiant.Etat = etudiant.Etat;
+                existingEtudiant.Section = etudiant.Section;
+                existingEtudiant.Specialite = etudiant.Specialite;
+                existingEtudiant.MotDePasse = etudiant.MotDePasse;
+                existingEtudiant.Tranche = etudiant.Tranche;
+                existingEtudiant.DateModification = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Etats = new[] { "Admis", "Redoublant" };
+            ViewBag.Sections = new[] { "1ère Année Cycle Ing" };
+            ViewBag.Specialites = new[] { "DevOps", "GL", "BI" };
+            return View(etudiant);
+        }
+
+        // POST: Supprimer un étudiant
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var etudiant = _context.Etudiants.Find(id);
+            if (etudiant == null)
+                return Json(new { success = false, message = "Étudiant introuvable" });
+
+            // Supprimer l'image
+            if (!string.IsNullOrEmpty(etudiant.ImageUrl))
+            {
+                try
+                {
+                    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, etudiant.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+                }
+                catch { }
+            }
+
+            _context.Etudiants.Remove(etudiant);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Étudiant supprimé avec succès" });
+        }
+    }
+}

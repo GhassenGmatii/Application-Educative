@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - Application Éducative</title>
+    <link href="~/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+        <link href="~/css/sb-admin-2.min.css" rel="stylesheet">
+        </head>
+
+        <body id="page-top">
+            <div id="wrapper">
+
+                @{
+                    string role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+                    string fullName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Utilisateur";
+                    string ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+                    string action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+                }
+
+                <!-- SIDEBAR -->
+                <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+                    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Home/Index">
+                        <div class="sidebar-brand-icon rotate-n-15">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="sidebar-brand-text mx-3">APPRENTI INSTRUIT</div>
+                    </a>
+
+                    <hr class="sidebar-divider my-0">
+
+                    <!-- Dashboard -->
+                    <li class="nav-item @(ctrl == "Home" ? "active" : "")">
+                        <a class="nav-link" href="@(role == "Professeur" ? "/Professeur/Dashboard" : role == "Etudiant" ? "/Etudiant/Dashboard" : "/Home/Index")">
+                            <i class="fas fa-fw fa-tachometer-alt"></i>
+                            <span>Tableau de bord</span>
+                        </a>
+                    </li>
+
+                    <hr class="sidebar-divider">
+
+                    @if (role == "Admin")
+                    {
+                        <div class="sidebar-heading">Administration</div>
+
+                        <!-- Admins -->
+                        <li class="nav-item">
+                            <a class="nav-link @(ctrl != "GestionAdmin" ? "collapsed" : "")"
+                                   href="#collapseAdmin" data-bs-toggle="collapse"
+                                   aria-expanded="@(ctrl == "GestionAdmin" ? "true" : "false")">
+                                <i class="fas fa-fw fa-user-shield"></i>
+                                <span>Gestion Admins</span>
+                            </a>
+                            <div id="collapseAdmin" class="collapse @(ctrl == "GestionAdmin" ? "show" : "")">
+                                <div class="bg-white py-2 collapse-inner rounded">
+                                    <h6 class="collapse-header">Administrateurs :</h6>
+                                    <a class="collapse-item @(ctrl == "GestionAdmin" && action == "Create" ? "active" : "")"
+                                           href="/GestionAdmin/Create">
+                                        <i class="fas fa-user-plus mr-1 text-success"></i> Ajouter
+                                    </a>
+                                    <a class="collapse-item @(ctrl == "GestionAdmin" && action == "Index" ? "active" : "")"
+                                           href="/GestionAdmin/Index">
+                                        <i class="fas fa-list mr-1 text-primary"></i> Liste
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <hr class="sidebar-divider">
+                        <div class="sidebar-heading">Enseignement</div>
+
+                        <!-- Professeurs -->
+                        <li class="nav-item">
+                            <a class="nav-link @(ctrl != "GestionProfesseur" ? "collapsed" : "")"
+                                   href="#collapseProf" data-bs-toggle="collapse"
+                                   aria-expanded="@(ctrl == "GestionProfesseur" ? "true" : "false")">
+                                <i class="fas fa-fw fa-chalkboard-teacher"></i>
+                                <span>Gestion Professeurs</span>
+                            </a>
+                            <div id="collapseProf" class="collapse @(ctrl == "GestionProfesseur" ? "show" : "")">
+                                <div class="bg-white py-2 collapse-inner rounded">
+                                    <h6 class="collapse-header">Professeurs :</h6>
+                                    <a class="collapse-item @(ctrl == "GestionProfesseur" && action == "Create" ? "active" : "")"
+                                           href="/GestionProfesseur/Create">
+                                        <i class="fas fa-user-plus mr-1 text-success"></i> Ajouter
+                                    </a>
+                                    <a class="collapse-item @(ctrl == "GestionProfesseur" && action == "Index" ? "active" : "")"
+                                           href="/GestionProfesseur/Index">
+                                        <i class="fas fa-list mr-1 text-primary"></i> Liste
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Étudiants -->
+                        <li class="nav-item">
+                            <a class="nav-link @(ctrl != "GestionEtudiant" ? "collapsed" : "")"
+                                   href="#collapseEtudiant" data-bs-toggle="collapse"
+                                   aria-expanded="@(ctrl == "GestionEtudiant" ? "true" : "false")">
+                                <i class="fas fa-fw fa-user-graduate"></i>
+                                <span>Gestion Étudiants</span>
+                            </a>
+                            <div id="collapseEtudiant" class="collapse @(ctrl == "GestionEtudiant" ? "show" : "")">
+                                <div class="bg-white py-2 collapse-inner rounded">
+                                    <h6 class="collapse-header">Étudiants :</h6>
+                                    <a class="collapse-item @(ctrl == "GestionEtudiant" && action == "Create" ? "active" : "")"
+                                           href="/GestionEtudiant/Create">
+                                        <i class="fas fa-user-plus mr-1 text-success"></i> Ajouter
+                                    </a>
+                                    <a class="collapse-item @(ctrl == "GestionEtudiant" && action == "Index" ? "active" : "")"
+                                           href="/GestionEtudiant/Index">
+                                        <i class="fas fa-list mr-1 text-primary"></i> Liste
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <hr class="sidebar-divider">
+                        <div class="sidebar-heading">Absences</div>
+
+                        <li class="nav-item @(ctrl == "Absence" ? "active" : "")">
+                            <a class="nav-link" href="/Absence/Index">
+                                <i class="fas fa-fw fa-calendar-times"></i>
+                                <span>Toutes les absences</span>
+                            </a>
+                        </li>
+                        <li class="nav-item @(ctrl == "Absence" && action == "Create" ? "active" : "")">
+                            <a class="nav-link" href="/Absence/Create">
+                                <i class="fas fa-fw fa-plus-circle"></i>
+                                <span>Saisir une absence</span>
+                            </a>
+                        </li>
+                    }
+
+                    @if (role == "Professeur")
+                    {
+                        <div class="sidebar-heading">Mes cours</div>
+
+                        <li class="nav-item @(ctrl == "Absence" ? "active" : "")">
+                            <a class="nav-link" href="/Absence/Index">
+                                <i class="fas fa-fw fa-calendar-times"></i>
+                                <span>Mes absences saisies</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Absence/Create">
+                                <i class="fas fa-fw fa-plus-circle"></i>
+                                <span>Saisir une absence</span>
+                            </a>
+                        </li>
+                    }
+
+                    @if (role == "Etudiant")
+                    {
+                        <div class="sidebar-heading">Mon espace</div>
+
+                        <li class="nav-item @(ctrl == "Absence" ? "active" : "")">
+                            <a class="nav-link" href="/Absence/Index">
+                                <i class="fas fa-fw fa-calendar-times"></i>
+                                <span>Mes absences</span>
+                            </a>
+                        </li>
+                    }
+
+                    <hr class="sidebar-divider d-none d-md-block">
+
+                </ul>
+                <!-- END SIDEBAR -->
+                <!-- CONTENT -->
+                <div id="content-wrapper" class="d-flex flex-column">
+                    <div id="content">
+
+                        <!-- TOPBAR -->
+                        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 shadow">
+                            <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <ul class="navbar-nav ml-auto align-items-center">
+                                <li class="nav-item mr-3">
+                                    <span class="text-gray-600 small">
+                                        @if (role == "Admin")
+                                        {
+                                            <i class="fas fa-user-shield mr-1 text-primary"></i>
+                                        }
+                                        else if (role == "Professeur")
+                                        {
+                                            <i class="fas fa-chalkboard-teacher mr-1 text-info"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-graduate mr-1 text-success"></i>
+                                        }
+                                        <strong>@fullName</strong>
+                                        <span class="badge @(role == "Admin" ? "bg-primary" : role == "Professeur" ? "bg-info" : "bg-success") ms-1">
+                                            @role
+                                        </span>
+                                    </span>
+                                </li>
+
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    <!-- CLOCHE NOTIFICATION -->
+                                    <li class="nav-item mr-3">
+                                        <a href="/Notification/Index" id="notifBell" title="Notifications"
+                                           style="position:relative;display:inline-flex;align-items:center;justify-content:center;
+                                                  width:38px;height:38px;border-radius:10px;
+                                                  background:rgba(249,115,22,.12);color:#F97316;
+                                                  font-size:1rem;text-decoration:none;transition:background .2s;">
+                                            <i class="fas fa-bell"></i>
+                                            <span id="notifBubble"
+                                                  style="display:none;position:absolute;top:-4px;right:-4px;
+                                                         min-width:18px;height:18px;border-radius:50px;
+                                                         background:#EF4444;color:white;font-size:.62rem;
+                                                         font-weight:900;align-items:center;justify-content:center;
+                                                         padding:0 4px;border:2px solid white;font-family:'Nunito',sans-serif;">0</span>
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="nav-item">
+                                    <a href="/Admin/Logout" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-sign-out-alt mr-1"></i>Déconnexion
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <div class="container-fluid">
+                            @RenderBody()
+                        </div>
+                    </div>
+
+                    <footer class="sticky-footer bg-white">
+                        <div class="container my-auto text-center">
+                            <span>© @DateTime.Now.Year Application Éducative</span>
+                        </div>
+                    </footer>
+                </div>
+
+            </div>
+
+            <script src="~/vendor/jquery/jquery.min.js"></script>
+            <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+            <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+            <script src="~/js/sb-admin-2.min.js"></script>
+            @await RenderSectionAsync("Scripts", required: false)
+
+            <script>
+            // ── Polling badge cloche toutes les 30s ──────────────────────
+            (function pollNotifs() {
+                fetch('/Notification/NombreNonLues')
+                    .then(r => r.json())
+                    .then(data => {
+                        var bubble = document.getElementById('notifBubble');
+                        if (!bubble) return;
+                        if (data.count > 0) {
+                            bubble.textContent = data.count > 9 ? '9+' : data.count;
+                            bubble.style.display = 'flex';
+                        } else {
+                            bubble.style.display = 'none';
+                        }
+                    })
+                    .catch(function() {});
+                setTimeout(pollNotifs, 30000);
+            })();
+            </script>
+
+        </body>
+    </html>

@@ -1,0 +1,501 @@
+﻿@model List<Application_Educative.Models.Notification>
+@{
+    ViewData["Title"] = "Mes Notifications d'Absence";
+    var absences = ViewBag.Absences as List<Application_Educative.Models.Absence>;
+    var matieres = ViewBag.MatieresFiltres as List<Application_Educative.Models.Matiere>;
+    int nonLues  = Model?.Count(n => !n.Lue) ?? 0;
+    int totalAbs = absences?.Count ?? 0;
+    int absJust  = absences?.Count(a => a.Justifiee) ?? 0;
+    int absNonJ  = totalAbs - absJust;
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg:         #f7f4f0;
+    --surface:    #ffffff;
+    --surface2:   #fdf9f5;
+    --border:     #ecddd0;
+    --border2:    #e0cfc0;
+    --accent:     #e8660a;
+    --accent2:    #f5890a;
+    --accent-bg:  #fff4ec;
+    --danger:     #d93025;
+    --danger-bg:  #fef1f0;
+    --success:    #1a7f4b;
+    --success-bg: #edf7f2;
+    --warning:    #c07b00;
+    --warning-bg: #fff8e6;
+    --text:       #1a1108;
+    --text2:      #4a3820;
+    --muted:      #9a8070;
+    --shadow:     0 1px 3px rgba(60,30,0,.07), 0 4px 14px rgba(60,30,0,.05);
+    --radius:     14px;
+    --radius-sm:  8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.notif-wrap {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 24px 72px;
+}
+.notif-wrap::before {
+    content: '';
+    display: block;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), #ffb347);
+    border-radius: 2px;
+    margin-bottom: 36px;
+}
+
+/* ── Header ── */
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+.page-header-left { display: flex; align-items: center; gap: 16px; }
+.page-header-icon { width: 52px; height: 52px; background: var(--accent); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 16px rgba(232,102,10,.3); flex-shrink: 0; position: relative; }
+.badge-count { position: absolute; top: -6px; right: -6px; background: var(--danger); color: #fff; font-size: .68rem; font-weight: 800; border-radius: 10px; padding: 2px 6px; border: 2px solid var(--bg); min-width: 20px; text-align: center; }
+.page-header h1 { font-size: 1.65rem; font-weight: 800; color: var(--text); letter-spacing: -.03em; line-height: 1.2; }
+.page-header p { font-size: .85rem; color: var(--muted); margin-top: 3px; }
+
+/* ── Stats cards ── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px; }
+.stat-card-icon { font-size: 1.6rem; }
+.stat-card-num { font-size: 1.8rem; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+.stat-card-label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.stat-card.s-total  .stat-card-num { color: var(--accent); }
+.stat-card.s-nonj   .stat-card-num { color: var(--danger); }
+.stat-card.s-just   .stat-card-num { color: var(--success); }
+.stat-card.s-unread .stat-card-num { color: var(--warning); }
+
+/* ── Filters ── */
+.filters-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 160px; flex: 1; }
+.filter-group label { font-size: .72rem; font-weight: 700; color: var(--text2); letter-spacing: .07em; text-transform: uppercase; }
+.filter-control { background: var(--surface2); border: 1.5px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); padding: 9px 13px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; appearance: none; cursor: pointer; transition: border-color .2s; }
+.filter-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(232,102,10,.12); }
+.btn-filter { padding: 9px 20px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn-filter:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-reset { padding: 9px 16px; border-radius: var(--radius-sm); background: var(--bg); color: var(--muted); border: 1.5px solid var(--border2); font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; }
+.btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px; box-shadow: var(--shadow); width: fit-content; }
+.tab-btn { padding: 8px 18px; border-radius: 9px; border: none; font-family: 'Plus Jakarta Sans', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; transition: all .2s; color: var(--muted); background: transparent; letter-spacing: .02em; }
+.tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(232,102,10,.3); }
+.tab-btn:hover:not(.active) { color: var(--accent); background: var(--accent-bg); }
+
+/* ── Notification list ── */
+.notif-list { display: flex; flex-direction: column; gap: 12px; }
+
+.notif-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+    cursor: pointer;
+}
+.notif-item:hover { box-shadow: var(--shadow), 0 0 0 2px var(--accent); border-color: #f5c9a0; }
+.notif-item.unread { border-left: 4px solid var(--accent); }
+.notif-item.read   { border-left: 4px solid var(--border); opacity: .85; }
+
+.notif-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+}
+.notif-type-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.notif-type-absence     { background: var(--danger-bg);  }
+.notif-type-justification { background: var(--success-bg); }
+.notif-type-default     { background: var(--accent-bg);  }
+
+.notif-meta { flex: 1; min-width: 0; }
+.notif-title { font-weight: 700; font-size: .92rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-subtitle { font-size: .78rem; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.notif-subtitle span { display: flex; align-items: center; gap: 3px; }
+
+.notif-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.notif-date-str { font-size: .74rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+/* ── Detail panel ── */
+.notif-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 20px 20px 20px 76px;
+    animation: slideDown .2s ease;
+}
+@@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+.notif-detail.open { display: block; }
+
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.detail-field label { font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .09em; display: block; margin-bottom: 4px; }
+.detail-field .val { font-size: .9rem; font-weight: 600; color: var(--text); }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 11px; border-radius: 20px; font-size: .72rem; font-weight: 700; border: 1px solid; }
+.badge-justified    { background: var(--success-bg); color: var(--success); border-color: #b5dfc9; }
+.badge-not-justified{ background: var(--danger-bg);  color: var(--danger);  border-color: #f5b8b4; }
+.badge-absent       { background: var(--danger-bg);  color: var(--danger);  border-color: #f5b8b4; }
+
+.detail-commentaire {
+    background: var(--warning-bg);
+    border: 1px solid #f0d89a;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: .85rem;
+    color: #6a4400;
+    display: flex; gap: 8px; align-items: flex-start;
+}
+.detail-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.btn-mark-read {
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border2);
+    background: var(--bg);
+    color: var(--text2);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-mark-read:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+/* ── Empty ── */
+.empty-state { text-align: center; padding: 64px 20px; color: var(--muted); }
+.empty-state .icon { font-size: 4rem; margin-bottom: 14px; opacity: .3; }
+.empty-state h3 { font-size: 1.1rem; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+.empty-state p { font-size: .88rem; }
+
+/* ── Mark all read ── */
+.toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.toolbar-info { font-size: .82rem; color: var(--muted); }
+.toolbar-info strong { color: var(--text); }
+.btn-mark-all { padding: 7px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--border2); background: var(--surface); color: var(--text2); font-family: 'Plus Jakarta Sans', sans-serif; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-mark-all:hover { border-color: var(--success); color: var(--success); background: var(--success-bg); }
+
+@@media (max-width: 640px) {
+    .page-header { flex-direction: column; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .filters-row { flex-direction: column; }
+    .filter-group { min-width: 100%; }
+    .notif-detail { padding: 16px; }
+    .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<div class="notif-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <div class="page-header-icon">
+                🔔
+                @if (nonLues > 0) { <span class="badge-count">@nonLues</span> }
+            </div>
+            <div>
+                <h1>Mes Notifications</h1>
+                <p>Absences · Justifications · Alertes de l'établissement</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card s-total">
+            <div class="stat-card-icon">📋</div>
+            <div>
+                <div class="stat-card-num">@totalAbs</div>
+                <div class="stat-card-label">Absences totales</div>
+            </div>
+        </div>
+        <div class="stat-card s-nonj">
+            <div class="stat-card-icon">⚠️</div>
+            <div>
+                <div class="stat-card-num">@absNonJ</div>
+                <div class="stat-card-label">Non justifiées</div>
+            </div>
+        </div>
+        <div class="stat-card s-just">
+            <div class="stat-card-icon">✅</div>
+            <div>
+                <div class="stat-card-num">@absJust</div>
+                <div class="stat-card-label">Justifiées</div>
+            </div>
+        </div>
+        <div class="stat-card s-unread">
+            <div class="stat-card-icon">💬</div>
+            <div>
+                <div class="stat-card-num">@nonLues</div>
+                <div class="stat-card-label">Non lues</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <form method="get" asp-action="MesNotifications">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>Matière</label>
+                    <select class="filter-control" name="matiereId">
+                        <option value="">Toutes les matières</option>
+                        @if (matieres != null)
+                        {
+                            foreach (var m in matieres)
+                            {
+                                var sel = ViewBag.SelectedMatiere != null && (int)ViewBag.SelectedMatiere == m.Id ? "selected" : "";
+                                <option value="@m.Id" @sel>@m.Nom</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date</label>
+                    <input type="date" class="filter-control" name="date"
+                           value="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="filter-group">
+                    <label>Statut</label>
+                    <select class="filter-control" name="statut">
+                        <option value="">Tout</option>
+                        <option value="non-justifiee" @(ViewBag.SelectedStatut == "non-justifiee" ? "selected" : "")>Non justifiée</option>
+                        <option value="justifiee"     @(ViewBag.SelectedStatut == "justifiee"     ? "selected" : "")>Justifiée</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+                    <button type="submit" class="btn-filter">🔍 Filtrer</button>
+                    <a href="@Url.Action("MesNotifications")" class="btn-reset">✕ Réinitialiser</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('absences', this)">📋 Absences (@totalAbs)</button>
+        <button class="tab-btn" onclick="switchTab('notifications', this)">🔔 Notifications (@(Model?.Count ?? 0))</button>
+    </div>
+
+    <!-- ══ TAB : ABSENCES ══ -->
+    <div id="tab-absences">
+        @if (absences == null || !absences.Any())
+        {
+            <div class="empty-state">
+                <div class="icon">🎉</div>
+                <h3>Aucune absence enregistrée</h3>
+                <p>Vous n'avez pas d'absence pour les critères sélectionnés.</p>
+            </div>
+        }
+        else
+        {
+            <div class="toolbar">
+                <div class="toolbar-info">
+                    <strong>@absences.Count</strong> absence(s) trouvée(s)
+                </div>
+            </div>
+            <div class="notif-list">
+                @foreach (var abs in absences.OrderByDescending(a => a.DateAbsence))
+                {
+                    var iconType = abs.Justifiee ? "notif-type-justification" : "notif-type-absence";
+                    var icon     = abs.Justifiee ? "✅" : "⚠️";
+                    var itemId   = $"abs-{abs.Id}";
+                    <div class="notif-item @(abs.Justifiee ? "read" : "unread")" onclick="toggleDetail('@itemId')">
+                        <div class="notif-header">
+                            <div class="notif-type-icon @iconType">@icon</div>
+                            <div class="notif-meta">
+                                <div class="notif-title">
+                                    Absence — @(abs.Matiere?.Nom ?? "Matière inconnue")
+                                </div>
+                                <div class="notif-subtitle">
+                                    <span>📅 @abs.DateAbsence.ToString("dd MMMM yyyy")</span>
+                                    @if (abs.Professeur != null)
+                                    {
+                                        <span>👤 @abs.Professeur.FirstName @abs.Professeur.LastName</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(abs.Commentaire))
+                                    {
+                                        <span>💬 Motif renseigné</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="notif-right">
+                                <span class="notif-date-str">@abs.DateSaisie.ToString("dd/MM/yyyy HH:mm")</span>
+                                @if (!abs.Justifiee) { <div class="unread-dot"></div> }
+                            </div>
+                        </div>
+                        <!-- Détail -->
+                        <div class="notif-detail" id="@itemId">
+                            <div class="detail-grid">
+                                <div class="detail-field">
+                                    <label>Matière</label>
+                                    <div class="val">@(abs.Matiere?.Nom ?? "—")</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Date de l'absence</label>
+                                    <div class="val">@abs.DateAbsence.ToString("dddd dd MMMM yyyy")</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Professeur</label>
+                                    <div class="val">@(abs.Professeur != null ? $"{abs.Professeur.FirstName} {abs.Professeur.LastName}" : "—")</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Enregistrée le</label>
+                                    <div class="val">@abs.DateSaisie.ToString("dd/MM/yyyy à HH:mm")</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Statut</label>
+                                    <div class="val">
+                                        @if (abs.Justifiee)
+                                        {
+                                            <span class="badge badge-justified">✓ Justifiée</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-not-justified">✗ Non justifiée</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(abs.Section?.Nom))
+                                {
+                                    <div class="detail-field">
+                                        <label>Section</label>
+                                        <div class="val">@abs.Section.Nom</div>
+                                    </div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(abs.Commentaire))
+                            {
+                                <div class="detail-commentaire">
+                                    <span>📝</span>
+                                    <div><strong>Motif :</strong> @abs.Commentaire</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ══ TAB : NOTIFICATIONS ══ -->
+    <div id="tab-notifications" style="display:none">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-state">
+                <div class="icon">🔔</div>
+                <h3>Aucune notification</h3>
+                <p>Vous n'avez pas de notification pour le moment.</p>
+            </div>
+        }
+        else
+        {
+            <div class="toolbar">
+                <div class="toolbar-info">
+                    <strong>@Model.Count</strong> notification(s) · <strong>@nonLues</strong> non lue(s)
+                </div>
+                @if (nonLues > 0)
+                {
+                    <form method="post" asp-action="MarquerToutesLues" style="margin:0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-mark-all">✓ Tout marquer comme lu</button>
+                    </form>
+                }
+            </div>
+            <div class="notif-list">
+                @foreach (var n in Model.OrderByDescending(n => n.DateCreation))
+                {
+                    var nItemId = $"notif-{n.Id}";
+                    var typeClass = n.Type == "absence" ? "notif-type-absence" : n.Type == "justification" ? "notif-type-justification" : "notif-type-default";
+                    var typeIcon  = n.Type == "absence" ? "⚠️" : n.Type == "justification" ? "✅" : "🔔";
+                    <div class="notif-item @(n.Lue ? "read" : "unread")" onclick="toggleDetail('@nItemId')">
+                        <div class="notif-header">
+                            <div class="notif-type-icon @typeClass">@typeIcon</div>
+                            <div class="notif-meta">
+                                <div class="notif-title">@n.Message</div>
+                                <div class="notif-subtitle">
+                                    <span>📅 @n.DateCreation.ToString("dd/MM/yyyy à HH:mm")</span>
+                                    <span>🏷️ @n.Type</span>
+                                </div>
+                            </div>
+                            <div class="notif-right">
+                                <span class="notif-date-str">@n.DateCreation.ToString("dd/MM HH:mm")</span>
+                                @if (!n.Lue) { <div class="unread-dot"></div> }
+                            </div>
+                        </div>
+                        <div class="notif-detail" id="@nItemId">
+                            <div class="detail-grid">
+                                <div class="detail-field">
+                                    <label>Message complet</label>
+                                    <div class="val">@n.Message</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Type</label>
+                                    <div class="val">@typeIcon @n.Type</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Date de réception</label>
+                                    <div class="val">@n.DateCreation.ToString("dddd dd MMMM yyyy à HH:mm")</div>
+                                </div>
+                                <div class="detail-field">
+                                    <label>Statut lecture</label>
+                                    <div class="val">@(n.Lue ? "✓ Lu" : "Non lu")</div>
+                                </div>
+                            </div>
+                            <div class="detail-actions">
+                                @if (!n.Lue)
+                                {
+                                    <form method="post" asp-action="MarquerLue" asp-route-id="@n.Id" style="margin:0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-mark-read">✓ Marquer comme lu</button>
+                                    </form>
+                                }
+                                @if (!string.IsNullOrEmpty(n.Lien))
+                                {
+                                    <a href="@n.Lien" class="btn-mark-read">🔗 Voir le détail</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+<script>
+function toggleDetail(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isOpen = el.classList.contains('open');
+    // Fermer tous les autres
+    document.querySelectorAll('.notif-detail.open').forEach(d => d.classList.remove('open'));
+    if (!isOpen) el.classList.add('open');
+}
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-absences').style.display     = tab === 'absences'      ? 'block' : 'none';
+    document.getElementById('tab-notifications').style.display = tab === 'notifications' ? 'block' : 'none';
+}
+</script>

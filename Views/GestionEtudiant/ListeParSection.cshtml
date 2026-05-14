@@ -1,0 +1,111 @@
+﻿@using Application_Educative.Models
+@model List<Etudiant>
+
+@{
+    ViewData["Title"] = $"Étudiants - {ViewBag.Section}";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>📋 Étudiants - <strong>@ViewBag.Section</strong></h2>
+            
+            <div class="mb-3">
+                <a href="/GestionEtudiant/Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour aux Sections
+                </a>
+                <a href="/GestionEtudiant/Create" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Ajouter un Étudiant
+                </a>
+            </div>
+
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="alert alert-warning">Aucun étudiant dans cette section</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Photo</th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>État</th>
+                                <th>Spécialité</th>
+                                <th>Date Création</th>
+                                <th>Date Modification</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var etudiant in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(etudiant.ImageUrl))
+                                        {
+                                            <img src="@etudiant.ImageUrl" alt="Photo" style="width:50px;height:50px;border-radius:50%;" />
+                                        }
+                                        else
+                                        {
+                                            <img src="/images/default-user.png" alt="Par défaut" style="width:50px;height:50px;border-radius:50%;" />
+                                        }
+                                    </td>
+                                    <td>@etudiant.Nom</td>
+                                    <td>@etudiant.Prenom</td>
+                                    <td><span class="badge bg-info">@etudiant.Etat</span></td>
+                                    <td>@etudiant.Specialite</td>
+                                   
+                                    <td>@etudiant.DateCreation.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (etudiant.DateModification.HasValue)
+                                        {
+                                            @etudiant.DateModification.Value.ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="/GestionEtudiant/Edit/@etudiant.EtudiantId" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> Modifier
+                                        </a>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteEtudiant(@etudiant.EtudiantId, '@etudiant.Nom @etudiant.Prenom')">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteEtudiant(id, name) {
+        if (confirm(`Êtes-vous sûr de vouloir supprimer ${name} ?`)) {
+            fetch(`/GestionEtudiant/Delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erreur : ' + data.message);
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        }
+    }
+</script>

@@ -1,0 +1,212 @@
+﻿<!-- CLOCHE NOTIFICATION STYLE FACEBOOK -->
+<li class="nav-item" style="position:relative;">
+
+    <!-- Bouton cloche -->
+    <button onclick="toggleNotifPanel()"
+            style="background:none; border:none; cursor:pointer;
+                   padding:8px 12px; position:relative;">
+        <i class="fas fa-bell fa-lg text-gray-400"></i>
+        <span id="notifBadge"
+              style="display:none; position:absolute; top:2px; right:4px;
+                     background:#e74c3c; color:white; border-radius:50%;
+                     width:20px; height:20px; font-size:11px; font-weight:700;
+                     align-items:center; justify-content:center;">0</span>
+    </button>
+
+    <!-- Panel style Facebook -->
+    <div id="notifPanel"
+         style="display:none; position:fixed; top:65px; right:20px;
+                width:390px; max-height:520px; background:white;
+                border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,0.25);
+                z-index:9999; overflow:hidden; border:1px solid #ddd;">
+
+        <!-- Header -->
+        <div style="padding:16px 20px; border-bottom:1px solid #f0f0f0;
+                    display:flex; justify-content:space-between;
+                    align-items:center; background:white;">
+            <span style="font-size:20px; font-weight:700;">Notifications</span>
+            <button onclick="marquerToutesLues()"
+                    style="border:none; background:none; color:#1877f2;
+                           font-weight:600; font-size:14px; cursor:pointer;">
+                Tout marquer comme lu
+            </button>
+        </div>
+
+        <!-- Corps -->
+        <div id="notifList"
+             style="overflow-y:auto; max-height:440px;">
+            <div id="notifLoading" class="text-center p-4 text-muted">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay fermeture -->
+<div id="notifOverlay"
+     onclick="fermerPanel()"
+     style="display:none; position:fixed; top:0; left:0;
+            width:100vw; height:100vh; z-index:9998;
+            background:transparent;"></div>
+
+<style>
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f5f5f5;
+        gap: 12px;
+        transition: background 0.15s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .notif-item:hover { background: #f2f2f2; }
+    .notif-item.non-lue { background: #e7f3ff; }
+    .notif-item.non-lue:hover { background: #dceeff; }
+
+    .notif-icone {
+        width: 48px; height: 48px; border-radius: 50%;
+        display: flex; align-items: center;
+        justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .notif-icone.absence       { background: #fff3cd; }
+    .notif-icone.bienvenue     { background: #d4edda; }
+    .notif-icone.justification { background: #d1ecf1; }
+    .notif-icone.info          { background: #e2e3e5; }
+
+    .notif-texte {
+        flex: 1;
+        font-size: 14px;
+        color: #1c1e21;
+        line-height: 1.4;
+    }
+    .notif-date {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    .notif-date.non-lue { color: #1877f2; }
+    .notif-date.lue     { color: #65676b; }
+
+    .notif-point {
+        width: 12px; height: 12px; border-radius: 50%;
+        background: #1877f2; flex-shrink: 0; margin-top: 8px;
+    }
+</style>
+
+<script>
+    // ── Icône selon type ──────────────────────────────────────
+    function getIcone(type) {
+        switch (type) {
+            case 'absence':       return { emoji: '⚠️', cls: 'absence' };
+            case 'bienvenue':     return { emoji: '🎉', cls: 'bienvenue' };
+            case 'justification': return { emoji: '✅', cls: 'justification' };
+            default:              return { emoji: 'ℹ️', cls: 'info' };
+        }
+    }
+
+    // ── Charger les notifications via fetch ───────────────────
+    async function chargerNotifications() {
+        try {
+            const res  = await fetch('/Notification/GetNotifications');
+            const data = await res.json();
+
+            // Badge compteur
+            const badge = document.getElementById('notifBadge');
+            if (data.count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent   = data.count > 99 ? '99+' : data.count;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            // Liste
+            const list = document.getElementById('notifList');
+
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center p-5 text-muted">
+                        <i class="fas fa-bell-slash fa-3x mb-3 d-block opacity-25"></i>
+                        <p class="mb-0">Aucune notification</p>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = data.notifications.map(n => {
+                const { emoji, cls } = getIcone(n.type);
+                return `
+                <div class="notif-item ${n.lue ? '' : 'non-lue'}"
+                     onclick="clicNotif(${n.id}, '${n.lien || ''}')">
+                    <div class="notif-icone ${cls}">${emoji}</div>
+                    <div style="flex:1;">
+                        <div class="notif-texte">${n.message}</div>
+                        <div class="notif-date ${n.lue ? 'lue' : 'non-lue'}">
+                            <i class="fas fa-clock me-1"></i>${n.date}
+                        </div>
+                    </div>
+                    ${!n.lue ? '<div class="notif-point"></div>' : ''}
+                </div>`;
+            }).join('');
+
+        } catch (err) {
+            console.error('Erreur chargement notifs:', err);
+        }
+    }
+
+    // ── Clic sur une notification ─────────────────────────────
+    async function clicNotif(id, lien) {
+        try {
+            await fetch('/Notification/MarquerLue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(id)
+            });
+            await chargerNotifications();
+        } catch (err) {
+            console.error(err);
+        }
+
+        fermerPanel();
+        if (lien && lien.trim() !== '') {
+            window.location.href = lien;
+        }
+    }
+
+    // ── Marquer toutes comme lues ─────────────────────────────
+    async function marquerToutesLues() {
+        try {
+            await fetch('/Notification/MarquerToutesLues', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            await chargerNotifications();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // ── Ouvrir / fermer le panel ──────────────────────────────
+    function toggleNotifPanel() {
+        const panel   = document.getElementById('notifPanel');
+        const overlay = document.getElementById('notifOverlay');
+        const ouvert  = panel.style.display !== 'none';
+
+        if (ouvert) {
+            fermerPanel();
+        } else {
+            panel.style.display   = 'block';
+            overlay.style.display = 'block';
+            chargerNotifications();
+        }
+    }
+
+    function fermerPanel() {
+        document.getElementById('notifPanel').style.display   = 'none';
+        document.getElementById('notifOverlay').style.display = 'none';
+    }
+
+    // ── Rafraîchir toutes les 30 secondes ────────────────────
+    chargerNotifications();
+    setInterval(chargerNotifications, 30000);
+</script>

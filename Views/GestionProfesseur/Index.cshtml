@@ -1,0 +1,577 @@
+﻿@model IEnumerable<Application_Educative.Models.Professeur>
+
+@{
+    ViewData["Title"] = "Gestion des Professeurs";
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    bool searchPerformed = ViewBag.SearchPerformed ?? false;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    body {
+        background-color: #fff8f0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%);
+        color: white;
+        padding: 25px 30px;
+        border-radius: 14px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(255,140,0,0.25);
+    }
+
+    .stat-card {
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+
+        .stat-card.teal {
+            background: linear-gradient(135deg, #ffb74d, #fb8c00);
+        }
+
+        .stat-card.purple {
+            background: linear-gradient(135deg, #ff7043, #f4511e);
+        }
+
+    .card-table {
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(255,140,0,0.12);
+        overflow: hidden;
+        border: none;
+    }
+
+    .table thead th {
+        background: #ff8c00;
+        color: white;
+        border: none;
+        padding: 14px 16px;
+        font-weight: 600;
+    }
+
+    .table tbody tr:hover {
+        background-color: #fff3e0;
+        transition: 0.2s;
+    }
+
+    .table tbody td {
+        padding: 13px 16px;
+        vertical-align: middle;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #ffc107, #ff9800);
+        color: #212529;
+        border: none;
+        border-radius: 7px;
+        padding: 6px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,152,0,0.5);
+        }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545, #b02a37);
+        color: white;
+        border: none;
+        border-radius: 7px;
+        padding: 6px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(220,53,69,0.5);
+        }
+
+    .btn-affect {
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+        color: white;
+        border: none;
+        border-radius: 7px;
+        padding: 6px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+        .btn-affect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,140,0,0.5);
+            color: white;
+        }
+
+    .btn-new {
+        background: linear-gradient(135deg, #ff8c00, #ff6b00);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 22px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+        .btn-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,0,0.4);
+            color: white;
+        }
+
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff8c00, #ff6b00);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .section-badge {
+        background: #fff3e0;
+        color: #e65100;
+        border: 1px solid #ffcc80;
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    .search-box {
+        border-radius: 10px;
+        border: 2px solid #ffe0b2;
+        padding: 10px 15px;
+    }
+
+        .search-box:focus {
+            border-color: #ff8c00;
+            box-shadow: 0 0 0 0.2rem rgba(255,140,0,0.15);
+        }
+</style>
+
+<div class="container-fluid py-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2>
+                <i class="fas fa-chalkboard-teacher me-2"></i>
+                Gestion des Professeurs
+            </h2>
+            <p class="mb-0 opacity-75">
+                Gérez les professeurs et leurs affectations aux sections
+            </p>
+        </div>
+
+        <a href="/GestionProfesseur/Create" class="btn btn-new">
+            <i class="fas fa-user-plus me-2"></i>
+            Ajouter un Prof
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+            <div class="stat-card blue">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Total Professeurs</p>
+                        <h3 class="mb-0 fw-bold">@Model.Count()</h3>
+                    </div>
+
+                    <i class="fas fa-chalkboard-teacher fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card teal">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Sections couvertes</p>
+                        <h3 class="mb-0 fw-bold">
+                            @Model.SelectMany(p => p.ProfesseurSections)
+                            .Select(ps => ps.SectionId)
+                            .Distinct()
+                            .Count()
+                        </h3>
+                    </div>
+
+                    <i class="fas fa-layer-group fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card purple">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-1 opacity-75">Total heures/sem.</p>
+                        <h3 class="mb-0 fw-bold">
+                            @Model.SelectMany(p => p.ProfesseurSections)
+                            .Sum(ps => ps.NombreHeures)h
+                        </h3>
+                    </div>
+
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Recherche -->
+    <div class="card card-table mb-4 p-3">
+
+        <form method="get"
+              action="/GestionProfesseur/Search"
+              class="d-flex gap-2">
+
+            <input type="text"
+                   name="terme"
+                   value="@searchTerm"
+                   placeholder="Rechercher par nom, prénom ou email..."
+                   class="form-control search-box">
+
+            <button type="submit" class="btn btn-warning px-4 text-white fw-bold">
+                <i class="fas fa-search me-1"></i>
+                Rechercher
+            </button>
+
+            @if (searchPerformed)
+            {
+                <a href="/GestionProfesseur/Index"
+                       class="btn btn-outline-secondary px-4">
+
+                    <i class="fas fa-times me-1"></i>
+                    Réinitialiser
+                </a>
+            }
+
+        </form>
+
+    </div>
+
+    <!-- Tableau -->
+    <div class="card card-table">
+
+        <table class="table table-hover mb-0">
+
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th><i class="fas fa-user me-1"></i>Nom & Prénom</th>
+                    <th><i class="fas fa-envelope me-1"></i>Email</th>
+                    <th><i class="fas fa-graduation-cap me-1"></i>Spécialité</th>
+                    <th><i class="fas fa-layer-group me-1"></i>Sections</th>
+                    <th><i class="fas fa-clock me-1"></i>Heures</th>
+                    <th><i class="fas fa-calendar me-1"></i>Date ajout</th>
+                    <th class="text-center">
+                        <i class="fas fa-cogs me-1"></i>Actions
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8"
+                            class="text-center py-5 text-muted">
+
+                            <i class="fas fa-chalkboard-teacher fa-3x mb-3 d-block opacity-25"></i>
+
+                            Aucun professeur trouvé
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int i = 1;
+
+                    foreach (var prof in Model)
+                    {
+                        string init = "";
+
+                        if (!string.IsNullOrEmpty(prof.FirstName))
+                            init += prof.FirstName[0];
+
+                        if (!string.IsNullOrEmpty(prof.LastName))
+                            init += prof.LastName[0];
+
+                        <tr>
+
+                            <td>
+                                <span class="badge bg-secondary">@i</span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+
+                                    <div class="avatar-circle">
+                                        @init.ToUpper()
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            @prof.FirstName @prof.LastName
+                                        </strong>
+
+                                        @if (prof.DateModification.HasValue)
+                                        {
+                                            <br>
+
+                                            <small class="text-muted">
+                                                <i class="fas fa-pen-to-square me-1"></i>
+
+                                                modifié
+                                                @prof.DateModification.Value.ToString("dd/MM/yyyy")
+                                            </small>
+                                        }
+
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td>
+                                <i class="fas fa-envelope text-warning me-1"></i>
+                                @prof.Email
+                            </td>
+
+                            <td>
+
+                                @if (!string.IsNullOrEmpty(prof.Specialite))
+                                {
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fas fa-tag me-1"></i>
+                                        @prof.Specialite
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">—</span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if (prof.ProfesseurSections.Any())
+                                {
+                                    foreach (var ps in prof.ProfesseurSections)
+                                    {
+                                        <span class="section-badge">
+                                            @ps.Section?.Nom
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">
+                                        Non affecté
+                                    </span>
+                                }
+
+                            </td>
+
+                            <td>
+
+                                @if (prof.ProfesseurSections.Any())
+                                {
+                                    <span class="fw-bold text-warning">
+                                        @prof.ProfesseurSections.Sum(ps => ps.NombreHeures)h
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+
+                            </td>
+
+                            <td>
+                                <small>
+                                    <i class="fas fa-clock text-muted me-1"></i>
+                                    @prof.DateAjout.ToString("dd/MM/yyyy")
+                                </small>
+                            </td>
+
+                            <td class="text-center">
+
+                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+
+                                    <a href="/GestionProfesseur/Edit/@prof.Id"
+                                           class="btn btn-edit">
+
+                                        <i class="fas fa-pen-to-square me-1"></i>
+                                        Modifier
+                                    </a>
+
+                                    <a href="/GestionProfesseur/Affecter/@prof.Id"
+                                           class="btn btn-affect">
+
+                                        <i class="fas fa-link me-1"></i>
+                                        Affecter
+                                    </a>
+
+                                    <button class="btn btn-delete"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal@prof.Id">
+
+                                        <i class="fas fa-trash-can me-1"></i>
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        <!-- Modal Suppression -->
+                        <div class="modal fade"
+                             id="deleteModal@prof.Id"
+                             tabindex="-1">
+
+                            <div class="modal-dialog modal-dialog-centered">
+
+                                <div class="modal-content border-0 shadow">
+
+                                    <div class="modal-header border-0"
+                                         style="background:linear-gradient(135deg,#ff8c00,#ff6b00);">
+
+                                        <h5 class="modal-title text-white">
+
+                                            <i class="fas fa-triangle-exclamation me-2"></i>
+
+                                            Confirmer la suppression
+                                        </h5>
+
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal"></button>
+
+                                    </div>
+
+                                    <div class="modal-body text-center py-4">
+
+                                        <i class="fas fa-user-slash fa-4x text-warning mb-3"></i>
+
+                                        <h5>Supprimer ce professeur ?</h5>
+
+                                        <p class="text-muted">
+                                            <strong>
+                                                @prof.FirstName @prof.LastName
+                                            </strong>
+                                        </p>
+
+                                        <p class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i>
+                                            @prof.Email
+                                        </p>
+
+                                        <div class="alert alert-warning text-start">
+
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+
+                                            Toutes les affectations de ce professeur
+                                            seront également supprimées.
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="modal-footer border-0 justify-content-center pb-4">
+
+                                        <button class="btn btn-outline-secondary px-4"
+                                                data-bs-dismiss="modal">
+
+                                            <i class="fas fa-xmark me-1"></i>
+                                            Annuler
+                                        </button>
+
+                                        <form method="post"
+                                              action="/GestionProfesseur/Delete/@prof.Id"
+                                              style="display:inline;">
+
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit"
+                                                    class="btn btn-warning text-white px-4">
+
+                                                <i class="fas fa-trash-can me-1"></i>
+
+                                                Oui, Supprimer
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        i++;
+                    }
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    setTimeout(() => {
+    document.querySelectorAll('.alert')
+    .forEach(a => new bootstrap.Alert(a).close());
+    }, 4000);
+</script>
