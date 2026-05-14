@@ -155,4 +155,3 @@ C:\Users\Ghassen\OneDrive\Desktop\Application-Educative\Application-Educative\ob
 C:\Users\Ghassen\OneDrive\Desktop\Application-Educative\Application-Educative\obj\Debug\net8.0\Application Educative.pdb
 C:\Users\Ghassen\OneDrive\Desktop\Application-Educative\Application-Educative\obj\Debug\net8.0\Application Educative.genruntimeconfig.cache
 C:\Users\Ghassen\OneDrive\Desktop\Application-Educative\Application-Educative\obj\Debug\net8.0\ref\Application Educative.dll
-C:\Users\Ghassen\OneDrive\Desktop\Application-Educative\Application-Educative\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

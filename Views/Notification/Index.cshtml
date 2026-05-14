@@ -1,0 +1,390 @@
+@model List<Application_Educative.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+    var role = ViewBag.Role as string ?? "";
+    var absences = ViewBag.Absences as List<Application_Educative.Models.Absence>;
+    var reclamations = ViewBag.Reclamations as List<Application_Educative.Models.Reclamation>;
+    var reclamationsRecues = ViewBag.ReclamationsRecues as List<Application_Educative.Models.Reclamation>;
+    var professeurs = ViewBag.Professeurs as List<Application_Educative.Models.Professeur>;
+    var admins = ViewBag.Admins as List<Application_Educative.Models.Admin>;
+    int nonLues = Model?.Count(n => !n.Lue) ?? 0;
+    int total = absences?.Count ?? 0;
+    int just = absences?.Count(a => a.Justifiee) ?? 0;
+    int nonJust = total - just;
+    bool depasse = (bool)(ViewBag.DepaseLimite ?? false);
+    int limite = (int)(ViewBag.LimiteAbsences ?? 3);
+}
+<style>
+:root{--or:#F97316;--ord:#EA580C;--orl:#FFF7ED;--orm:#FFEDD5;--re:#EF4444;--gr:#22C55E;--bl:#3B82F6;--sh:0 2px 12px rgba(0,0,0,.08);--sh2:0 8px 32px rgba(249,115,22,.15);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#F3F4F6;font-family:'Segoe UI',system-ui,sans-serif;}
+.ph{background:linear-gradient(135deg,var(--or),var(--ord));padding:1.8rem 1.5rem 3rem;position:relative;overflow:hidden;}
+.ph::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:36px;background:#F3F4F6;border-radius:36px 36px 0 0;}
+.ph h1{color:#fff;font-size:1.5rem;font-weight:800;display:flex;align-items:center;gap:.5rem;}
+.ph p{color:rgba(255,255,255,.82);font-size:.88rem;margin-top:.25rem;}
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem;padding:0 1.2rem;margin-top:-1.5rem;position:relative;z-index:10;}
+.sc{background:#fff;border-radius:14px;padding:.9rem .7rem;text-align:center;box-shadow:var(--sh);border-top:3px solid #E5E7EB;}
+.sc.or{border-top-color:var(--or)}.sc.re{border-top-color:var(--re)}.sc.gr{border-top-color:var(--gr)}
+.sc .v{font-size:1.7rem;font-weight:800;line-height:1;}.sc.or .v{color:var(--or)}.sc.re .v{color:var(--re)}.sc.gr .v{color:var(--gr)}
+.sc .l{font-size:.7rem;color:#6B7280;margin-top:.25rem;}
+.wrap{padding:1.2rem;}
+.alert-warn{background:#FFF7ED;border:1.5px solid #FED7AA;color:#C2410C;border-radius:12px;padding:.9rem 1rem;margin-bottom:1rem;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:.5rem;}
+.alert-ok{background:#F0FDF4;border:1px solid #BBF7D0;color:#15803D;border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.85rem;}
+.alert-err{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.85rem;}
+.tabs{display:flex;background:#fff;border-radius:12px;padding:4px;box-shadow:var(--sh);margin-bottom:1rem;gap:4px;}
+.tb{flex:1;padding:.55rem .4rem;border:none;background:transparent;border-radius:9px;font-size:.8rem;font-weight:600;color:#6B7280;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.3rem;}
+.tb.active{background:var(--or);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,.35);}
+.tb .bx{background:var(--orm);color:var(--ord);border-radius:20px;font-size:.65rem;padding:1px 5px;font-weight:700;}
+.tb.active .bx{background:rgba(255,255,255,.3);color:#fff;}
+.tp{display:none;}.tp.active{display:block;}
+.nc{background:#fff;border-radius:12px;padding:.9rem;margin-bottom:.7rem;box-shadow:var(--sh);border-left:4px solid #E5E7EB;display:flex;gap:.7rem;position:relative;}
+.nc.nl{border-left-color:var(--or);background:var(--orl);}
+.ni{width:34px;height:34px;border-radius:9px;background:var(--orm);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.nc.nl .ni{background:var(--or);}
+.nm{font-size:.85rem;color:#374151;font-weight:500;line-height:1.45;flex:1;}
+.nd{font-size:.7rem;color:#9CA3AF;margin-top:.2rem;}
+.dot{width:7px;height:7px;background:var(--or);border-radius:50%;position:absolute;top:10px;right:10px;}
+.btn-lu{background:none;border:1px solid var(--or);color:var(--or);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600;cursor:pointer;margin-top:.35rem;}
+.btn-lu:hover{background:var(--or);color:#fff;}
+.btn-all{display:block;width:100%;background:var(--orl);border:1.5px solid var(--orm);color:var(--ord);border-radius:10px;padding:.6rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;margin-bottom:.9rem;}
+.btn-all:hover{background:var(--orm);}
+.ac{background:#fff;border-radius:12px;padding:.9rem;margin-bottom:.7rem;box-shadow:var(--sh);border-left:4px solid var(--re);cursor:pointer;transition:box-shadow .2s;}
+.ac.j{border-left-color:var(--gr)}.ac:hover{box-shadow:var(--sh2);}
+.ah{display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;}
+.am{font-weight:700;font-size:.88rem;}
+.bs{font-size:.67rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+.bnj{background:#FEE2E2;color:#DC2626;}.bj{background:#DCFCE7;color:#16A34A;}
+.ameta{font-size:.76rem;color:#9CA3AF;display:flex;gap:.8rem;flex-wrap:wrap;}
+.btn-send{background:var(--or);color:#fff;border:none;border-radius:10px;padding:.6rem 1rem;font-size:.83rem;font-weight:700;cursor:pointer;width:100%;margin-top:.5rem;}
+.btn-send:hover{background:var(--ord);}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:1000;align-items:flex-end;}
+.ov.open{display:flex;}
+.pn{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:1.4rem;max-height:85vh;overflow-y:auto;animation:su .3s;}
+@@keyframes su{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.hnd{width:38px;height:4px;background:#E5E7EB;border-radius:99px;margin:0 auto 1rem;}
+.pt{font-size:1.05rem;font-weight:800;color:var(--or);margin-bottom:.9rem;}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid #F3F4F6;font-size:.84rem;}
+.dr:last-of-type{border-bottom:none;}
+.dr .k{color:#9CA3AF;font-weight:500;}.dr .v{font-weight:700;color:#111827;}
+.btn-close{width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:.7rem;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:.9rem;}
+textarea{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:.7rem;font-size:.84rem;resize:vertical;font-family:inherit;margin-top:.5rem;}
+textarea:focus{outline:none;border-color:var(--or);}
+select{width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:.6rem;font-size:.84rem;margin-top:.35rem;background:#fff;}
+select:focus{outline:none;border-color:var(--or);}
+.rc{background:#fff;border-radius:12px;padding:.9rem;margin-bottom:.7rem;box-shadow:var(--sh);border-left:4px solid var(--bl);}
+.rs-att{color:#92400E;background:#FEF3C7;}.rs-tr{color:#065F46;background:#D1FAE5;}.rs-rej{color:#991B1B;background:#FEE2E2;}
+.badge-statut{font-size:.67rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+.empty{text-align:center;padding:2.5rem 1rem;color:#9CA3AF;}
+.empty .ic{font-size:2.2rem;margin-bottom:.4rem;}
+.section-title{font-size:.78rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;padding-left:.2rem;}
+.reponse-box{background:#F9FAFB;border-radius:8px;padding:.6rem .8rem;margin-top:.5rem;font-size:.8rem;border-left:3px solid var(--gr);color:#374151;}
+</style>
+
+<div class="ph">
+    <h1>🔔 @(role == "Etudiant" ? "Mes Notifications" : role == "Professeur" ? "Notifications & Réclamations" : "Tableau Notifications")</h1>
+    <p>@(role == "Etudiant" ? "Consultez vos absences, notifications et envoyez vos réclamations" : "Gérez les réclamations et notifications reçues")</p>
+</div>
+
+@if (role == "Etudiant")
+{
+<div class="sr">
+    <div class="sc or"><div class="v">@total</div><div class="l">Total absences</div></div>
+    <div class="sc re"><div class="v">@nonJust</div><div class="l">Non justifiées</div></div>
+    <div class="sc gr"><div class="v">@just</div><div class="l">Justifiées</div></div>
+</div>
+}
+
+<div class="wrap">
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert-ok">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert-err">@TempData["ErrorMessage"]</div> }
+
+@if (role == "Etudiant" && depasse)
+{
+    <div class="alert-warn">⚠️ Vous avez dépassé la limite de <strong>@limite absences non justifiées</strong> ! Contactez votre professeur ou l'administration.</div>
+}
+
+@* ─── ONGLETS ─── *@
+<div class="tabs">
+    <button class="tb active" onclick="tab('notifs',this)">🔔 Notifications <span class="bx">@nonLues</span></button>
+    @if (role == "Etudiant")
+    {
+        <button class="tb" onclick="tab('absences',this)">📋 Absences <span class="bx">@total</span></button>
+        <button class="tb" onclick="tab('reclam',this)">📩 Réclamations <span class="bx">@(reclamations?.Count ?? 0)</span></button>
+    }
+    else
+    {
+        <button class="tb" onclick="tab('reclam',this)">📩 Réclamations <span class="bx">@(reclamationsRecues?.Count ?? 0)</span></button>
+    }
+</div>
+
+@* ─── TAB : NOTIFICATIONS ─── *@
+<div id="tp-notifs" class="tp active">
+    @if (nonLues > 0)
+    {
+        <form asp-action="MarquerToutLu" asp-controller="Notification" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-all">✔ Tout marquer comme lu (@nonLues non lu(e)s)</button>
+        </form>
+    }
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty"><div class="ic">🔕</div><p>Aucune notification pour l'instant.</p></div>
+    }
+    else
+    {
+        foreach (var n in Model)
+        {
+            <div class="nc @(n.Lue ? "" : "nl")">
+                <div class="ni">@(n.Type=="absence"?"⚠️":n.Type=="justification"?"✅":n.Type=="reclamation"?"📩":"ℹ️")</div>
+                <div style="flex:1">
+                    <div class="nm">@n.Message</div>
+                    <div class="nd">🕐 @n.DateCreation.ToString("dd/MM/yyyy à HH:mm")</div>
+                    @if (!n.Lue)
+                    {
+                        <form asp-action="MarquerLue" asp-controller="Notification" asp-route-id="@n.Id" method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-lu">Marquer lu</button>
+                        </form>
+                    }
+                </div>
+                @if (!n.Lue) { <div class="dot"></div> }
+            </div>
+        }
+    }
+</div>
+
+@* ─── TAB : ABSENCES (étudiant) ─── *@
+@if (role == "Etudiant")
+{
+<div id="tp-absences" class="tp">
+    @if (absences == null || !absences.Any())
+    {
+        <div class="empty"><div class="ic">🎉</div><p>Aucune absence ! Félicitations !</p></div>
+    }
+    else
+    {
+        <div class="section-title">Cliquez sur une absence pour voir les détails et envoyer une réclamation</div>
+        int idx = 0;
+        foreach (var a in absences)
+        {
+            string aid = "abs_" + idx++;
+            <div class="ac @(a.Justifiee ? "j" : "")"
+                 onclick="openAbs('@aid','@a.Matiere?.Nom','@a.DateAbsence.ToString("dd/MM/yyyy")','@a.DateAbsence.ToString("HH:mm")','@(a.Professeur?.FirstName + " " + a.Professeur?.LastName)','@a.Section?.Nom','@(a.Justifiee ? "✅ Justifiée" : "❌ Non justifiée")','@a.DateSaisie.ToString("dd/MM/yyyy à HH:mm")','@(a.Commentaire ?? "—")','@a.Id','@(a.ProfesseurId)','@(a.Justifiee ? "1" : "0")')">
+                <div class="ah">
+                    <div class="am">📚 @a.Matiere?.Nom</div>
+                    <span class="bs @(a.Justifiee ? "bj" : "bnj")">@(a.Justifiee ? "✅ Justifiée" : "❌ Non justifiée")</span>
+                </div>
+                <div class="ameta">
+                    <span>📅 @a.DateAbsence.ToString("dd/MM/yyyy")</span>
+                    <span>🕐 @a.DateAbsence.ToString("HH:mm")</span>
+                    <span>👤 @a.Professeur?.FirstName @a.Professeur?.LastName</span>
+                    @if (a.Section != null) { <span>🏫 @a.Section.Nom</span> }
+                </div>
+            </div>
+        }
+    }
+</div>
+}
+
+@* ─── TAB : RÉCLAMATIONS ─── *@
+<div id="tp-reclam" class="tp">
+
+@if (role == "Etudiant")
+{
+    @* Formulaire envoi réclamation générale *@
+    <div class="section-title">Envoyer une réclamation</div>
+    <div style="background:#fff;border-radius:12px;padding:1rem;box-shadow:var(--sh);margin-bottom:1rem;">
+        <form asp-action="EnvoyerReclamation" asp-controller="Notification" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="absenceId" value="" />
+            <div style="margin-bottom:.5rem;">
+                <label style="font-size:.8rem;font-weight:600;color:#374151;">Destinataire</label>
+                <select name="destinataireRole" id="destRole" onchange="updateDest()" style="margin-bottom:.4rem;">
+                    <option value="Admin">Administration</option>
+                    <option value="Professeur">Professeur</option>
+                </select>
+                <select name="destinataireId" id="destId">
+                    @if (admins != null) { foreach (var ad in admins) { <option value="@ad.Id">@ad.FirstName @ad.LastName</option> } }
+                </select>
+            </div>
+            <label style="font-size:.8rem;font-weight:600;color:#374151;">Votre message</label>
+            <textarea name="message" rows="4" placeholder="Décrivez votre réclamation (min. 10 caractères)..."></textarea>
+            <button type="submit" class="btn-send">📤 Envoyer la réclamation</button>
+        </form>
+    </div>
+
+    @* Historique réclamations envoyées *@
+    @if (reclamations != null && reclamations.Any())
+    {
+        <div class="section-title">Mes réclamations envoyées</div>
+        foreach (var r in reclamations)
+        {
+            <div class="rc">
+                <div class="ah">
+                    <span style="font-size:.82rem;font-weight:600;">📩 À : @r.DestinataireRole</span>
+                    <span class="badge-statut @(r.Statut=="En attente"?"rs-att":r.Statut=="Traitée"?"rs-tr":"rs-rej")">@r.Statut</span>
+                </div>
+                <div style="font-size:.82rem;color:#374151;margin:.3rem 0;">@r.Message</div>
+                <div class="nd">📅 @r.DateEnvoi.ToString("dd/MM/yyyy à HH:mm")</div>
+                @if (!string.IsNullOrEmpty(r.ReponseAdmin))
+                {
+                    <div class="reponse-box">💬 Réponse : @r.ReponseAdmin<br/><span class="nd">@r.DateReponse?.ToString("dd/MM/yyyy à HH:mm")</span></div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty"><div class="ic">📭</div><p>Aucune réclamation envoyée.</p></div>
+    }
+}
+else
+{
+    @* Vue Admin/Prof : réclamations reçues *@
+    @if (reclamationsRecues != null && reclamationsRecues.Any())
+    {
+        <div class="section-title">Réclamations reçues</div>
+        foreach (var r in reclamationsRecues)
+        {
+            <div class="rc">
+                <div class="ah">
+                    <span style="font-size:.82rem;font-weight:700;">👤 @r.Etudiant?.Prenom @r.Etudiant?.Nom</span>
+                    <span class="badge-statut @(r.Statut=="En attente"?"rs-att":r.Statut=="Traitée"?"rs-tr":"rs-rej")">@r.Statut</span>
+                </div>
+                <div style="font-size:.82rem;color:#374151;margin:.3rem 0;">@r.Message</div>
+                <div class="nd">📅 @r.DateEnvoi.ToString("dd/MM/yyyy à HH:mm")</div>
+                @if (!string.IsNullOrEmpty(r.ReponseAdmin))
+                {
+                    <div class="reponse-box">💬 Réponse envoyée : @r.ReponseAdmin</div>
+                }
+                else if (r.Statut == "En attente")
+                {
+                    <details style="margin-top:.5rem;">
+                        <summary style="font-size:.78rem;font-weight:600;color:var(--or);cursor:pointer;">✏️ Répondre</summary>
+                        <form asp-action="RepondreReclamation" asp-controller="Notification" method="post" style="margin-top:.5rem;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reclamationId" value="@r.Id" />
+                            <textarea name="reponse" rows="3" placeholder="Votre réponse..."></textarea>
+                            <select name="statut" style="margin-top:.4rem;">
+                                <option value="Traitée">Traitée</option>
+                                <option value="Rejetée">Rejetée</option>
+                            </select>
+                            <button type="submit" class="btn-send" style="margin-top:.4rem;">📤 Envoyer la réponse</button>
+                        </form>
+                    </details>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty"><div class="ic">📭</div><p>Aucune réclamation reçue.</p></div>
+    }
+}
+</div>
+
+</div>
+
+@* ─── PANEL DÉTAIL ABSENCE ─── *@
+<div class="ov" id="absOv" onclick="if(event.target===this)closeAbs()">
+    <div class="pn">
+        <div class="hnd"></div>
+        <div class="pt">📋 Détails de l'absence</div>
+        <div class="dr"><span class="k">Matière</span>   <span class="v" id="dMat"></span></div>
+        <div class="dr"><span class="k">Date</span>      <span class="v" id="dDate"></span></div>
+        <div class="dr"><span class="k">Heure</span>     <span class="v" id="dHeure"></span></div>
+        <div class="dr"><span class="k">Enseignant</span><span class="v" id="dProf"></span></div>
+        <div class="dr"><span class="k">Section</span>   <span class="v" id="dSec"></span></div>
+        <div class="dr"><span class="k">Statut</span>    <span class="v" id="dStat"></span></div>
+        <div class="dr"><span class="k">Saisie le</span> <span class="v" id="dSaisie"></span></div>
+        <div class="dr"><span class="k">Motif</span>     <span class="v" id="dMotif"></span></div>
+        <div id="limiteWarn" style="display:none;margin-top:.7rem;" class="alert-warn">⚠️ Vous avez dépassé la limite d'absences autorisées !</div>
+
+        @* Formulaire réclamation liée à cette absence *@
+        <div id="reclForm" style="margin-top:1rem;display:none;">
+            <div style="font-size:.82rem;font-weight:700;color:#374151;margin-bottom:.4rem;">📩 Envoyer une réclamation pour cette absence</div>
+            <form asp-action="EnvoyerReclamation" asp-controller="Notification" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="absenceId"       id="rAbsId" />
+                <input type="hidden" name="destinataireId"  id="rDestId" />
+                <input type="hidden" name="destinataireRole" id="rDestRole" />
+                <select id="reclTarget" onchange="changeReclTarget()" style="margin-bottom:.4rem;">
+                    <option value="admin">Administration</option>
+                    <option value="prof">Professeur (de cette absence)</option>
+                </select>
+                <textarea name="message" rows="3" placeholder="Décrivez votre réclamation..."></textarea>
+                <button type="submit" class="btn-send">📤 Envoyer</button>
+            </form>
+        </div>
+
+        <button class="btn-close" onclick="closeAbs()">Fermer</button>
+    </div>
+</div>
+
+<script>
+// Données admins/profs pour les selects
+@using System.Text.Json
+@{
+    var adminsArr = admins != null
+        ? admins.Select(a => new { id = a.Id, nom = a.FirstName + " " + a.LastName }).Cast<object>().ToList()
+        : new List<object>();
+    var profsArr  = professeurs != null
+        ? professeurs.Select(p => new { id = p.Id, nom = p.FirstName + " " + p.LastName }).Cast<object>().ToList()
+        : new List<object>();
+    var adminsJson = JsonSerializer.Serialize(adminsArr);
+    var profsJson  = JsonSerializer.Serialize(profsArr);
+}
+var adminsData = @Html.Raw(adminsJson);
+var profsData  = @Html.Raw(profsJson);
+var limiteAbs  = @limite;
+var totalNJ    = @nonJust;
+
+function tab(name, btn) {
+    document.querySelectorAll('.tp').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tb').forEach(b => b.classList.remove('active'));
+    document.getElementById('tp-' + name).classList.add('active');
+    btn.classList.add('active');
+}
+
+function updateDest() {
+    var role = document.getElementById('destRole').value;
+    var sel  = document.getElementById('destId');
+    sel.innerHTML = '';
+    var data = role === 'Admin' ? adminsData : profsData;
+    data.forEach(function(d){ var o=document.createElement('option');o.value=d.id;o.textContent=d.nom;sel.appendChild(o); });
+}
+
+var currentProfId = 0;
+var adminId0 = adminsData.length > 0 ? adminsData[0].id : 0;
+
+function openAbs(id,mat,date,heure,prof,sec,stat,saisie,motif,absId,profId,justifie) {
+    document.getElementById('dMat').textContent   = mat   || '—';
+    document.getElementById('dDate').textContent  = date  || '—';
+    document.getElementById('dHeure').textContent = heure || '—';
+    document.getElementById('dProf').textContent  = prof  || '—';
+    document.getElementById('dSec').textContent   = sec   || '—';
+    document.getElementById('dStat').textContent  = stat  || '—';
+    document.getElementById('dSaisie').textContent= saisie|| '—';
+    document.getElementById('dMotif').textContent = motif || '—';
+    document.getElementById('limiteWarn').style.display = totalNJ >= limiteAbs ? 'flex' : 'none';
+    currentProfId = parseInt(profId) || 0;
+    document.getElementById('rAbsId').value = absId;
+    changeReclTarget();
+    document.getElementById('reclForm').style.display = justifie === '1' ? 'none' : 'block';
+    document.getElementById('absOv').classList.add('open');
+}
+
+function changeReclTarget() {
+    var t = document.getElementById('reclTarget').value;
+    if (t === 'prof') {
+        document.getElementById('rDestRole').value = 'Professeur';
+        document.getElementById('rDestId').value   = currentProfId;
+    } else {
+        document.getElementById('rDestRole').value = 'Admin';
+        document.getElementById('rDestId').value   = adminId0;
+    }
+}
+
+function closeAbs() { document.getElementById('absOv').classList.remove('open'); }
+</script>
