@@ -67,6 +67,18 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
 
+    // Fix existing students with dummy sections
+    var etudiantsToFix = context.Etudiants.Where(e => e.Section == "Section A" || e.Section == "Section B").ToList();
+    if (etudiantsToFix.Any())
+    {
+        foreach (var e in etudiantsToFix)
+        {
+            if (e.Section == "Section A") e.Section = "1ère Année Licence";
+            if (e.Section == "Section B") e.Section = "2ème Année Licence";
+        }
+        context.SaveChanges();
+    }
+
     if (!context.Admins.Any())
     {
         context.Admins.Add(new Admin
@@ -84,12 +96,14 @@ using (var scope = app.Services.CreateScope())
     if (!context.Sections.Any())
     {
         context.Sections.AddRange(
-            new Section { Nom = "Section A", Niveau = "1ère année" },
-            new Section { Nom = "Section B", Niveau = "1ère année" },
-            new Section { Nom = "Section A", Niveau = "2ème année" },
-            new Section { Nom = "Section B", Niveau = "2ème année" },
-            new Section { Nom = "Section A", Niveau = "3ème année" },
-            new Section { Nom = "Section B", Niveau = "3ème année" }
+            new Section { Nom = "Cycle Ingénieur Alternant", Niveau = "1ère année" },
+            new Section { Nom = "Cycle Ingénieur Alternant", Niveau = "2ème année" },
+            new Section { Nom = "Cycle Ingénieur Alternant", Niveau = "3ème année" },
+            new Section { Nom = "Cours du Jour", Niveau = "1ère année" },
+            new Section { Nom = "Cours du Jour", Niveau = "2ème année" },
+            new Section { Nom = "Cours du Jour", Niveau = "3ème année" },
+            new Section { Nom = "Master", Niveau = "1ère année" },
+            new Section { Nom = "Master", Niveau = "2ème année" }
         );
         context.SaveChanges();
     }
@@ -123,14 +137,17 @@ using (var scope = app.Services.CreateScope())
     if (!context.Etudiants.Any())
     {
         context.Etudiants.AddRange(
-            new Etudiant { Nom = "Gmati", Prenom = "Ghassen", Email = "ghassen@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Informatique" },
-            new Etudiant { Nom = "Jlassi", Prenom = "Mohamed", Email = "mohamed@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section B", Specialite = "Informatique" },
-            new Etudiant { Nom = "Ayari", Prenom = "Amina", Email = "amina@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Mathématiques" },
-            new Etudiant { Nom = "Boussetta", Prenom = "Sarra", Email = "sarra@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section B", Specialite = "Physique" },
-            new Etudiant { Nom = "Khemiri", Prenom = "Yassine", Email = "yassine@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "Section A", Specialite = "Informatique" }
+            new Etudiant { Nom = "Gmati", Prenom = "Ghassen", Email = "ghassen@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "1ère Année Licence", Specialite = "Informatique" },
+            new Etudiant { Nom = "Jlassi", Prenom = "Mohamed", Email = "mohamed@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "1ère Année Licence", Specialite = "Informatique" },
+            new Etudiant { Nom = "Ayari", Prenom = "Amina", Email = "amina@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "1ère Année Licence", Specialite = "Mathématiques" },
+            new Etudiant { Nom = "Boussetta", Prenom = "Sarra", Email = "sarra@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "2ème Année Licence", Specialite = "Physique" },
+            new Etudiant { Nom = "Khemiri", Prenom = "Yassine", Email = "yassine@gmail.com", MotDePasse = BCrypt.Net.BCrypt.HashPassword("1234"), ConfirmPassword = "1234", Etat = "Actif", Section = "1ère Année Licence", Specialite = "Informatique" }
         );
         context.SaveChanges();
     }
+
+    // Générer les données de test supplémentaires (Absences, Réclamations, Notifications)
+    TestDataSeeder.Initialize(context);
 }
 
 app.Run();

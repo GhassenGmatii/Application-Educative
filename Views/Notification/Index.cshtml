@@ -201,11 +201,10 @@ select:focus{outline:none;border-color:var(--or);}
             <div style="margin-bottom:.5rem;">
                 <label style="font-size:.8rem;font-weight:600;color:#374151;">Destinataire</label>
                 <select name="destinataireRole" id="destRole" onchange="updateDest()" style="margin-bottom:.4rem;">
-                    <option value="Admin">Administration</option>
                     <option value="Professeur">Professeur</option>
                 </select>
                 <select name="destinataireId" id="destId">
-                    @if (admins != null) { foreach (var ad in admins) { <option value="@ad.Id">@ad.FirstName @ad.LastName</option> } }
+                    @if (professeurs != null) { foreach (var pr in professeurs) { <option value="@pr.Id">@pr.FirstName @pr.LastName</option> } }
                 </select>
             </div>
             <label style="font-size:.8rem;font-weight:600;color:#374151;">Votre message</label>
@@ -260,26 +259,33 @@ else
                 }
                 else if (r.Statut == "En attente")
                 {
-                    <details style="margin-top:.5rem;">
-                        <summary style="font-size:.78rem;font-weight:600;color:var(--or);cursor:pointer;">✏️ Répondre</summary>
-                        <form action="/Notification/RepondreReclamation" method="post" style="margin-top:.5rem;">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="reclamationId" value="@r.Id" />
-                            <textarea name="reponse" rows="3" placeholder="Votre réponse..."></textarea>
-                            <select name="statut" style="margin-top:.4rem;">
-                                <option value="Traitée">Traitée</option>
-                                <option value="Rejetée">Rejetée</option>
-                            </select>
-                            @if (r.AbsenceId != null)
-                            {
-                                <label style="display:block; margin-top:.6rem; font-size:.8rem; font-weight:600; color:var(--re); cursor:pointer;">
-                                    <input type="checkbox" name="supprimerAbsence" value="true" style="margin-right:5px;"> 
-                                    🗑️ Supprimer l'absence associée
-                                </label>
-                            }
-                            <button type="submit" class="btn-send" style="margin-top:.4rem;">📤 Envoyer la réponse</button>
-                        </form>
-                    </details>
+                    @if (role == "Professeur")
+                    {
+                        <details style="margin-top:.5rem;">
+                            <summary style="font-size:.78rem;font-weight:600;color:var(--or);cursor:pointer;">✏️ Répondre</summary>
+                            <form action="/Notification/RepondreReclamation" method="post" style="margin-top:.5rem;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="reclamationId" value="@r.Id" />
+                                <textarea name="reponse" rows="3" placeholder="Votre réponse..."></textarea>
+                                <select name="statut" style="margin-top:.4rem;">
+                                    <option value="Traitée">Traitée</option>
+                                    <option value="Rejetée">Rejetée</option>
+                                </select>
+                                @if (r.AbsenceId != null)
+                                {
+                                    <label style="display:block; margin-top:.6rem; font-size:.8rem; font-weight:600; color:var(--re); cursor:pointer;">
+                                        <input type="checkbox" name="supprimerAbsence" value="true" style="margin-right:5px;"> 
+                                        🗑️ Supprimer l'absence associée
+                                    </label>
+                                }
+                                <button type="submit" class="btn-send" style="margin-top:.4rem;">📤 Envoyer la réponse</button>
+                            </form>
+                        </details>
+                    }
+                    else
+                    {
+                        <div style="font-size:.82rem;color:#9CA3AF;margin-top:.4rem;">En attente de traitement par le professeur.</div>
+                    }
                 }
             </div>
         }
@@ -316,8 +322,7 @@ else
                 <input type="hidden" name="absenceId"       id="rAbsId" />
                 <input type="hidden" name="destinataireId"  id="rDestId" />
                 <input type="hidden" name="destinataireRole" id="rDestRole" />
-                <select id="reclTarget" onchange="changeReclTarget()" style="margin-bottom:.4rem;">
-                    <option value="admin">Administration</option>
+                <select id="reclTarget" style="margin-bottom:.4rem;">
                     <option value="prof">Professeur (de cette absence)</option>
                 </select>
                 <textarea name="message" rows="3" placeholder="Décrivez votre réclamation..."></textarea>
@@ -377,21 +382,13 @@ function openAbs(id,mat,date,heure,prof,sec,stat,saisie,motif,absId,profId,justi
     document.getElementById('limiteWarn').style.display = totalNJ >= limiteAbs ? 'flex' : 'none';
     currentProfId = parseInt(profId) || 0;
     document.getElementById('rAbsId').value = absId;
-    changeReclTarget();
+    document.getElementById('rDestRole').value = 'Professeur';
+    document.getElementById('rDestId').value   = currentProfId;
     document.getElementById('reclForm').style.display = justifie === '1' ? 'none' : 'block';
     document.getElementById('absOv').classList.add('open');
 }
 
-function changeReclTarget() {
-    var t = document.getElementById('reclTarget').value;
-    if (t === 'prof') {
-        document.getElementById('rDestRole').value = 'Professeur';
-        document.getElementById('rDestId').value   = currentProfId;
-    } else {
-        document.getElementById('rDestRole').value = 'Admin';
-        document.getElementById('rDestId').value   = adminId0;
-    }
-}
+
 
 function closeAbs() { document.getElementById('absOv').classList.remove('open'); }
 </script>

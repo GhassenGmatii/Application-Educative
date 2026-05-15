@@ -1,4 +1,4 @@
-﻿using Application_Educative.Data;
+using Application_Educative.Data;
 using Application_Educative.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -180,10 +180,13 @@ namespace Application_Educative.Controllers
             var prof = await _context.Professeurs
                 .Include(p => p.ProfesseurSections)
                 .ThenInclude(ps => ps.Section)
+                .Include(p => p.ProfesseurSections)
+                .ThenInclude(ps => ps.Matiere)
                 .FirstOrDefaultAsync(p => p.Id == id);
             if (prof == null) return NotFound();
 
             ViewBag.Sections = await _context.Sections.ToListAsync();
+            ViewBag.Matieres = await _context.Matieres.ToListAsync();
             return View(prof);
         }
 
@@ -191,6 +194,8 @@ namespace Application_Educative.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Affecter(int profId,
             List<int> SectionIds,
+            List<int?> MatiereIds,
+            List<string> Specialites,
             List<int> NombreHeures,
             List<string> Jours,
             List<string> HeuresDebut,
@@ -208,6 +213,8 @@ namespace Application_Educative.Controllers
                 {
                     ProfesseurId = profId,
                     SectionId = SectionIds[i],
+                    MatiereId = (MatiereIds != null && i < MatiereIds.Count && MatiereIds[i] != 0) ? MatiereIds[i] : null,
+                    Specialite = (Specialites != null && i < Specialites.Count) ? Specialites[i] : null,
                     NombreHeures = i < NombreHeures.Count ? NombreHeures[i] : 0,
                     Jour = i < Jours.Count ? Jours[i] : null,
                     HeureDebut = i < HeuresDebut.Count && !string.IsNullOrEmpty(HeuresDebut[i])

@@ -1,4 +1,4 @@
-﻿using Application_Educative.Data;
+using Application_Educative.Data;
 using Application_Educative.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -57,27 +57,50 @@ namespace Application_Educative.Controllers
         public async Task<IActionResult> Create()
         {
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (role == "Etudiant") return RedirectToAction("Index");
+            if (role != "Professeur") return RedirectToAction("Index");
 
-            ViewBag.Matieres = await _context.Matieres.OrderBy(m => m.Nom).ToListAsync();
-            ViewBag.Sections = await _context.Sections.ToListAsync();
             ViewBag.Role = role;
 
-            if (role == "Admin")
-                ViewBag.Professeurs = await _context.Professeurs.OrderBy(p => p.LastName).ToListAsync();
+            var profId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            var profSections = await _context.ProfesseurSections
+                .Include(ps => ps.Section)
+                .Include(ps => ps.Matiere)
+                .Where(ps => ps.ProfesseurId == profId)
+                .ToListAsync();
+            ViewBag.ProfSections = profSections;
 
             return View();
         }
 
         // ─── AJAX : étudiants par section ────────────────────────────────────
         [HttpGet]
-        public async Task<IActionResult> GetEtudiantsBySection(int sectionId)
+        public async Task<IActionResult> GetEtudiantsBySection(int sectionId, string? specialite)
         {
             var section = await _context.Sections.FindAsync(sectionId);
             if (section == null) return Json(new List<object>());
 
-            var etudiants = await _context.Etudiants
-                .Where(e => e.Section == section.Nom)
+            // Convert Section.Niveau + Section.Nom to match Etudiant.Section format
+            // e.g., "1ère année" + "Cycle Ingénieur Alternant" -> "1ère Année Cycle Ing Alternant"
+            var secStr = (section.Niveau ?? "").Replace("1ère année", "1ère Année")
+                                               .Replace("2ème année", "2ème Année")
+                                               .Replace("3ème année", "3ème Année");
+            var nomStr = section.Nom.Replace("Cycle Ingénieur Alternant", "Cycle Ing Alternant")
+                                    .Replace("Cycle Ingénieur", "Cycle Ing")
+                                    .Replace("Cours du Jour", "Licence");
+            var combinedSectionStr = $"{secStr} {nomStr}".Trim();
+
+            var query = _context.Etudiants.AsQueryable();
+
+            // Match Etudiant Section
+            query = query.Where(e => e.Section == combinedSectionStr || e.Section == section.Nom);
+
+            // Match Etudiant Specialite
+            if (!string.IsNullOrEmpty(specialite))
+            {
+                query = query.Where(e => e.Specialite == specialite);
+            }
+
+            var etudiants = await query
                 .OrderBy(e => e.Nom)
                 .Select(e => new { id = e.EtudiantId, nom = e.Nom, prenom = e.Prenom })
                 .ToListAsync();
@@ -132,7 +155,7 @@ namespace Application_Educative.Controllers
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
-            if (role == "Etudiant") return Forbid();
+            if (role != "Professeur") return Forbid();
 
             // Validation de base
             if (etudiantIds == null || etudiantIds.Count == 0)
@@ -144,10 +167,7 @@ namespace Application_Educative.Controllers
             if (!DateTime.TryParse(dateAbsence, out var dateAbs))
                 dateAbs = DateTime.Today;
 
-            int profId = role == "Professeur" ? userId : 0;
-
-            if (role == "Admin" && Request.Form.ContainsKey("ProfesseurId"))
-                int.TryParse(Request.Form["ProfesseurId"], out profId);
+            int profId = userId;
 
             var matiereAbs = await _context.Matieres.FindAsync(matiereId);
 

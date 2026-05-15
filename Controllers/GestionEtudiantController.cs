@@ -1,4 +1,4 @@
-﻿using Application_Educative.Data;
+using Application_Educative.Data;
 using Application_Educative.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -124,6 +124,11 @@ namespace Application_Educative.Controllers
                     return View(etudiant);
                 }
             }
+
+            ModelState.Remove("MotDePasse");
+            ModelState.Remove("ConfirmPassword");
+            ModelState.Remove("etudiant.MotDePasse");
+            ModelState.Remove("etudiant.ConfirmPassword");
 
             if (!ModelState.IsValid) return View(etudiant);
 

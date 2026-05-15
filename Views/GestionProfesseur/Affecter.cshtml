@@ -1,7 +1,8 @@
-﻿@model Application_Educative.Models.Professeur
+@model Application_Educative.Models.Professeur
 @{
     ViewData["Title"] = "Affecter des Sections";
     var sections = ViewBag.Sections as List<Application_Educative.Models.Section>;
+    var matieres = ViewBag.Matieres as List<Application_Educative.Models.Matiere>;
     var jours = new[] { "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi" };
     var existingSections = Model.ProfesseurSections?.ToList() ?? new List<Application_Educative.Models.ProfesseurSection>();
     int rowCount = existingSections.Any() ? existingSections.Count : 1;
@@ -70,27 +71,61 @@
                                 <i class="fas fa-times"></i>
                             </button>
                             <div class="row g-3 mt-1">
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <label class="form-label"><i class="fas fa-layer-group me-1 text-info"></i>Section</label>
-                                    <select name="SectionIds" class="form-select">
+                                    <select name="SectionIds" class="form-select" onchange="updateSpec(this, @idx)">
                                         <option value="0">-- Choisir --</option>
                                         @if (sections != null)
                                         {
-                                            foreach (var sec in sections)
+                                            var groupedSections = sections.GroupBy(s => s.Nom);
+                                            foreach (var group in groupedSections)
                                             {
-                                                <option value="@sec.Id" @(ex?.SectionId == sec.Id ? "selected" : "")>
-                                                    @sec.Nom @(string.IsNullOrEmpty(sec.Niveau) ? "" : $"— {sec.Niveau}")
-                                                </option>
+                                                <optgroup label="@group.Key">
+                                                    @foreach (var sec in group)
+                                                    {
+                                                        <option value="@sec.Id" @(ex?.SectionId == sec.Id ? "selected" : "")>
+                                                            @sec.Niveau
+                                                        </option>
+                                                    }
+                                                </optgroup>
                                             }
                                         }
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label"><i class="fas fa-clock me-1 text-info"></i>Heures/sem.</label>
-                                    <input type="number" name="NombreHeures" min="1" max="40"
-                                           value="@(ex?.NombreHeures ?? 3)" class="form-control" />
+                                    <label class="form-label"><i class="fas fa-tag me-1 text-info"></i>Spécialité</label>
+                                    <select name="Specialites" id="spec_@idx" class="form-select">
+                                        @if (!string.IsNullOrEmpty(ex?.Specialite))
+                                        {
+                                            <option value="@ex.Specialite">@ex.Specialite</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="">-- Choisir --</option>
+                                        }
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
+                                    <label class="form-label"><i class="fas fa-book me-1 text-info"></i>Matière</label>
+                                    <select name="MatiereIds" class="form-select">
+                                        <option value="0">-- Choisir --</option>
+                                        @if (matieres != null)
+                                        {
+                                            foreach (var mat in matieres)
+                                            {
+                                                <option value="@mat.Id" @(ex?.MatiereId == mat.Id ? "selected" : "")>
+                                                    @mat.Nom
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <label class="form-label"><i class="fas fa-clock me-1 text-info"></i>H/sem.</label>
+                                    <input type="number" name="NombreHeures" min="1" max="40"
+                                           value="@(ex?.NombreHeures ?? 3)" class="form-control" style="padding: 9px 5px;"/>
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label"><i class="fas fa-calendar-day me-1 text-info"></i>Jour</label>
                                     <select name="Jours" class="form-select">
                                         <option value="">— Jour —</option>
@@ -165,30 +200,110 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const sectionsHtml = `@Html.Raw(string.Join("", (sections ?? new List<Application_Educative.Models.Section>())
-        .Select(s => $"<option value='{s.Id}'>{s.Nom}{(string.IsNullOrEmpty(s.Niveau) ? "" : $" — {s.Niveau}")}</option>")))`;
+        .GroupBy(s => s.Nom)
+        .Select(g => $"<optgroup label='{g.Key}'>{string.Join("", g.Select(s => $"<option value='{s.Id}'>{s.Niveau}</option>"))}</optgroup>")))`;
+
+    const matieresHtml = `@Html.Raw(string.Join("", (matieres ?? new List<Application_Educative.Models.Matiere>())
+        .Select(m => $"<option value='{m.Id}'>{m.Nom}</option>")))`;
 
     const joursOpts = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
         .map(j => `<option value="${j}">${j}</option>`).join('');
+
+    const sectionNames = {
+        @if (sections != null) {
+            foreach(var s in sections) {
+                <text>@s.Id: "@(s.Niveau) @(s.Nom)",</text>
+            }
+        }
+    };
+
+    // Map ID → Nom de la section (ex: "Master", "Cours du Jour", "Cycle Ingénieur Alternant")
+    const sectionNoms = {
+        @if (sections != null) {
+            foreach(var s in sections) {
+                <text>@s.Id: "@Html.Raw(s.Nom.Replace("\"","\\\""))",</text>
+            }
+        }
+    };
+
+    // Map ID → Niveau numérique (1, 2 ou 3)
+    const sectionNiveaux = {
+        @if (sections != null) {
+            foreach(var s in sections) {
+                var niv = s.Niveau.Contains("1") ? 1 : s.Niveau.Contains("2") ? 2 : 3;
+                <text>@s.Id: @niv,</text>
+            }
+        }
+    };
+
+    // Liste complète des spécialités par type de section
+    const SPEC_1ERE = ["Tronc commun", "Informatique", "Gestion", "Math\u00e9matiques"];
+    const SPEC_MASTER = ["Marketing", "Cyber Security", "Informatique", "Finance", "Management", "Intelligence Artificielle", "Cybers\u00e9curit\u00e9", "Ressources Humaines", "Commerce International"];
+    const SPEC_OTHER = ["Cyber Security", "R\u00e9seau", "GL", "BI", "DevOps", "Cloud Computing", "Intelligence Artificielle", "Informatique", "Gestion", "\u00c9conomie", "Comptabilit\u00e9"];
+
+    function getSpecialitesList(sectionId) {
+        const nom    = (sectionNoms[sectionId]   || "").toLowerCase();
+        const niveau = (sectionNiveaux[sectionId] || 0);
+
+        // Master (1ère ou 2ème année Master)
+        if (nom.includes("master")) return SPEC_MASTER;
+
+        // 1ère année (niveau == 1) toutes filières
+        if (niveau === 1) return SPEC_1ERE;
+
+        // 2ème / 3ème année
+        return SPEC_OTHER;
+    }
+
+    function updateSpec(selectEl, idx) {
+        const specSelect = document.getElementById('spec_' + idx);
+        const val = selectEl.value;
+
+        specSelect.innerHTML = '<option value="">-- Choisir --</option>';
+
+        if (!val || val === "0") return;
+
+        const spList = getSpecialitesList(val);
+        spList.forEach(sp => {
+            const opt = document.createElement('option');
+            opt.value = sp;
+            opt.textContent = sp;
+            specSelect.appendChild(opt);
+        });
+    }
 
     function addSection() {
         const count = document.querySelectorAll('.section-row').length;
         const div = document.createElement('div');
         div.className = 'section-row';
+        div.id = 'row_' + count;
         div.innerHTML = `
             <span class="row-number">Section ${count + 1}</span>
             <button type="button" class="btn-remove" onclick="removeRow(this)"><i class="fas fa-times"></i></button>
             <div class="row g-3 mt-1">
-                <div class="col-md-6">
+                <div class="col-md-3">
                     <label class="form-label">Section</label>
-                    <select name="SectionIds" class="form-select">
+                    <select name="SectionIds" class="form-select" onchange="updateSpec(this, ${count})">
                         <option value="0">-- Choisir --</option>${sectionsHtml}
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Heures/sem.</label>
-                    <input type="number" name="NombreHeures" value="3" min="1" max="40" class="form-control"/>
+                    <label class="form-label">Spécialité</label>
+                    <select name="Specialites" id="spec_${count}" class="form-select">
+                        <option value="">-- Choisir --</option>
+                    </select>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label">Matière</label>
+                    <select name="MatiereIds" class="form-select">
+                        <option value="0">-- Choisir --</option>${matieresHtml}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">H/sem.</label>
+                    <input type="number" name="NombreHeures" value="3" min="1" max="40" class="form-control" style="padding: 9px 5px;"/>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">Jour</label>
                     <select name="Jours" class="form-select">
                         <option value="">— Jour —</option>${joursOpts}

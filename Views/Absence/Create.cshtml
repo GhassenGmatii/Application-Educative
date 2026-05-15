@@ -1,8 +1,9 @@
-﻿@{
+@{
     ViewData["Title"] = "Enregistrer les absences";
     var matieres = ViewBag.Matieres as IEnumerable<Application_Educative.Models.Matiere>;
     var sections = ViewBag.Sections as IEnumerable<Application_Educative.Models.Section>;
     var professeurs = ViewBag.Professeurs as IEnumerable<Application_Educative.Models.Professeur>;
+    var profSections = ViewBag.ProfSections as IEnumerable<Application_Educative.Models.ProfesseurSection>;
     var role = ViewBag.Role as string;
 }
 
@@ -126,24 +127,50 @@
         <div class="panel vis" id="panel1">
             <div class="ptitle">Paramètres de la séance <span class="pbadge">Étape 1/3</span></div>
             <div class="fgrid">
-                <div class="fwrap">
-                    <label>Section</label>
-                    <div class="sw">
-                        <select id="sectionSelect">
-                            <option value="">— Choisir —</option>
-                            @if (sections != null) { @foreach (var s in sections) { <option value="@s.Id">@s.Nom</option> } }
-                        </select>
+                @if (role == "Professeur" && profSections != null)
+                {
+                    <div class="fwrap" style="grid-column: span 2;">
+                        <label>Classe (Section, Spécialité et Matière)</label>
+                        <div class="sw">
+                            <select id="profSectionSelect" onchange="updateProfSelection(this)">
+                                <option value="" data-sec="" data-mat="" data-spec="" data-txt="">— Choisir une classe —</option>
+                                @foreach (var ps in profSections)
+                                {
+                                    <option value="@ps.Id" data-sec="@ps.SectionId" data-mat="@ps.MatiereId" data-spec="@ps.Specialite" data-txt="@ps.Section?.Niveau @ps.Section?.Nom @(!string.IsNullOrEmpty(ps.Specialite) ? " - " + ps.Specialite : "") (Matière: @ps.Matiere?.Nom)">
+                                        @ps.Section?.Niveau @ps.Section?.Nom 
+                                        @(!string.IsNullOrEmpty(ps.Specialite) ? $" — {ps.Specialite}" : "") 
+                                        (Matière: @ps.Matiere?.Nom)
+                                    </option>
+                                }
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="fwrap">
-                    <label>Matière</label>
-                    <div class="sw">
-                        <select id="matiereSelect">
-                            <option value="">— Choisir —</option>
-                            @if (matieres != null) { @foreach (var m in matieres) { <option value="@m.Id">@m.Nom</option> } }
-                        </select>
+                    <input type="hidden" id="sectionSelect" />
+                    <input type="hidden" id="matiereSelect" />
+                    <input type="hidden" id="specialiteSelect" />
+                }
+                else
+                {
+                    <div class="fwrap">
+                        <label>Section</label>
+                        <div class="sw">
+                            <select id="sectionSelect">
+                                <option value="">— Choisir —</option>
+                                @if (sections != null) { @foreach (var s in sections) { <option value="@s.Id">@s.Niveau @s.Nom</option> } }
+                            </select>
+                        </div>
                     </div>
-                </div>
+                    <div class="fwrap">
+                        <label>Matière</label>
+                        <div class="sw">
+                            <select id="matiereSelect">
+                                <option value="">— Choisir —</option>
+                                @if (matieres != null) { @foreach (var m in matieres) { <option value="@m.Id">@m.Nom</option> } }
+                            </select>
+                        </div>
+                    </div>
+                    <input type="hidden" id="specialiteSelect" value="" />
+                }
             </div>
             <div class="fgrid">
                 <div class="fwrap">
@@ -258,20 +285,38 @@
         });
     }
 
+    window.updateProfSelection = function(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        document.getElementById('sectionSelect').value = opt.getAttribute('data-sec') || '';
+        document.getElementById('matiereSelect').value = opt.getAttribute('data-mat') || '';
+        document.getElementById('specialiteSelect').value = opt.getAttribute('data-spec') || '';
+    };
+
     document.getElementById('btnStep1').addEventListener('click', function () {
         var sec  = document.getElementById('sectionSelect');
         var mat  = document.getElementById('matiereSelect');
+        var spec = document.getElementById('specialiteSelect');
         var date = document.getElementById('dateInput');
         var hr   = document.getElementById('heureSelect');
         if (!sec.value || !mat.value || !date.value || !hr.value) {
             alert('Veuillez remplir tous les champs.'); return;
         }
+
+        var secTxt = '';
+        var pSel = document.getElementById('profSectionSelect');
+        if (pSel) {
+            var opt = pSel.options[pSel.selectedIndex];
+            secTxt = opt.getAttribute('data-txt');
+        } else {
+            var sOpt = sec.options[sec.selectedIndex];
+            var mOpt = mat.options[mat.selectedIndex];
+            secTxt = (sOpt ? sOpt.text : '') + ' · ' + (mOpt ? mOpt.text : '');
+        }
+
         setStep(2);
-        loadStudents(sec.value);
+        loadStudents(sec.value, spec ? spec.value : '');
         document.getElementById('seanceInfo').textContent =
-            '📅 ' + sec.options[sec.selectedIndex].text +
-            ' · ' + mat.options[mat.selectedIndex].text +
-            ' · ' + fmtDate(date.value) + ' à ' + hr.value;
+            '📅 ' + secTxt + ' · ' + fmtDate(date.value) + ' à ' + hr.value;
     });
 
     document.getElementById('btnBack1').addEventListener('click', function () { setStep(1); });
@@ -280,8 +325,17 @@
         if (!absentSet.size) { alert('Marquez au moins un étudiant absent.'); return; }
         var sec  = document.getElementById('sectionSelect');
         var mat  = document.getElementById('matiereSelect');
-        document.getElementById('rSection').textContent     = sec.options[sec.selectedIndex].text;
-        document.getElementById('rMatiere').textContent     = mat.options[mat.selectedIndex].text;
+        var pSel = document.getElementById('profSectionSelect');
+        
+        if (pSel) {
+            var opt = pSel.options[pSel.selectedIndex];
+            document.getElementById('rSection').textContent = opt.text.split('(Matière')[0];
+            document.getElementById('rMatiere').textContent = opt.getAttribute('data-txt').split('Matière: ')[1].replace(')','');
+        } else {
+            document.getElementById('rSection').textContent = sec.options[sec.selectedIndex].text;
+            document.getElementById('rMatiere').textContent = mat.options[mat.selectedIndex].text;
+        }
+
         document.getElementById('rDate').textContent        = fmtDate(document.getElementById('dateInput').value);
         document.getElementById('rHeure').textContent       = document.getElementById('heureSelect').value;
         document.getElementById('rAbsentCount').textContent = absentSet.size;
@@ -317,13 +371,16 @@
         document.getElementById('absForm').submit();
     });
 
-    function loadStudents(sId) {
+    function loadStudents(sId, sp) {
         document.getElementById('loadingBar').classList.add('show');
         document.getElementById('tableWrap').style.display  = 'none';
         document.getElementById('emptyState').style.display = 'none';
         absentSet.clear(); updateCtr();
 
-        fetch('/Absence/GetEtudiantsBySection?sectionId=' + sId)
+        var url = '/Absence/GetEtudiantsBySection?sectionId=' + sId;
+        if (sp) url += '&specialite=' + encodeURIComponent(sp);
+
+        fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (data) { allStudents = data; renderTable(data); })
             .catch(function () { document.getElementById('emptyState').style.display = 'block'; })

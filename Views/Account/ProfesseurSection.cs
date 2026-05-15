@@ -1,4 +1,4 @@
-﻿namespace Application_Educative.Models
+namespace Application_Educative.Models
 {
     public class ProfesseurSection
     {
@@ -9,6 +9,11 @@
 
         public int SectionId { get; set; }
         public Section? Section { get; set; }
+
+        public int? MatiereId { get; set; }
+        public Matiere? Matiere { get; set; }
+
+        public string? Specialite { get; set; }
 
         public int NombreHeures { get; set; }
         public string? Jour { get; set; }          

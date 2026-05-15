@@ -185,6 +185,8 @@ namespace Application_Educative.Controllers
             var role   = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
+            if (role != "Professeur") return Forbid();
+
             var reclamation = await _context.Reclamations
                 .Include(r => r.Etudiant)
                 .FirstOrDefaultAsync(r => r.Id == reclamationId
