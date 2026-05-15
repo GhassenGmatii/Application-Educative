@@ -87,7 +87,7 @@ namespace Application_Educative.Controllers
 
             notif.Lue = true;
             await _context.SaveChangesAsync();
-            return Ok();
+            return RedirectToAction(nameof(Index));
         }
 
         // ── MARQUER TOUTES LUES ───────────────────────────────────────────────
@@ -161,9 +161,12 @@ namespace Application_Educative.Controllers
             var etudiant = await _context.Etudiants.FindAsync(etudiantId);
             string nomEtudiant = $"{etudiant?.Prenom} {etudiant?.Nom}";
 
+            var msgTrim = message.Trim();
+            var shortMsg = msgTrim.Length <= 60 ? msgTrim : msgTrim.Substring(0, 60);
+
             await Creer(
                 _context,
-                $"📩 Réclamation reçue de {nomEtudiant} : \"{message.Trim().Substring(0, Math.Min(60, message.Length))}...\"",
+                $"📩 Réclamation reçue de {nomEtudiant} : \"{shortMsg}...\"",
                 destinataireRole,
                 destinataireId,
                 "reclamation",
@@ -177,7 +180,7 @@ namespace Application_Educative.Controllers
         // ── RÉPONDRE À UNE RÉCLAMATION (admin/prof) ──────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RepondreReclamation(int reclamationId, string reponse, string statut)
+        public async Task<IActionResult> RepondreReclamation(int reclamationId, string reponse, string statut, bool supprimerAbsence = false)
         {
             var role   = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
             var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -193,12 +196,26 @@ namespace Application_Educative.Controllers
             reclamation.ReponseAdmin  = reponse?.Trim();
             reclamation.DateReponse   = DateTime.Now;
             reclamation.Statut        = statut ?? "Traitée";
+
+            if (supprimerAbsence && reclamation.AbsenceId.HasValue)
+            {
+                var absence = await _context.Absences.FindAsync(reclamation.AbsenceId.Value);
+                if (absence != null)
+                {
+                    reclamation.AbsenceId = null;
+                    _context.Absences.Remove(absence);
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             // Notifier l'étudiant
+            var repTrim = reponse?.Trim() ?? "";
+            var shortRep = repTrim.Length <= 60 ? repTrim : repTrim.Substring(0, 60);
+
             await Creer(
                 _context,
-                $"📬 Réponse à votre réclamation : \"{reponse?.Trim().Substring(0, Math.Min(60, reponse?.Length ?? 0))}...\"",
+                $"📬 Réponse à votre réclamation : \"{shortRep}...\"",
                 "Etudiant",
                 reclamation.EtudiantId,
                 "reclamation",

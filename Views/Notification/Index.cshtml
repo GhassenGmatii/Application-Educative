@@ -122,7 +122,7 @@ select:focus{outline:none;border-color:var(--or);}
 <div id="tp-notifs" class="tp active">
     @if (nonLues > 0)
     {
-        <form asp-action="MarquerToutLu" asp-controller="Notification" method="post">
+        <form action="/Notification/MarquerToutLu" method="post">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn-all">✔ Tout marquer comme lu (@nonLues non lu(e)s)</button>
         </form>
@@ -142,7 +142,7 @@ select:focus{outline:none;border-color:var(--or);}
                     <div class="nd">🕐 @n.DateCreation.ToString("dd/MM/yyyy à HH:mm")</div>
                     @if (!n.Lue)
                     {
-                        <form asp-action="MarquerLue" asp-controller="Notification" asp-route-id="@n.Id" method="post" style="display:inline">
+                        <form action="/Notification/MarquerLue/@n.Id" method="post" style="display:inline">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn-lu">Marquer lu</button>
                         </form>
@@ -195,7 +195,7 @@ select:focus{outline:none;border-color:var(--or);}
     @* Formulaire envoi réclamation générale *@
     <div class="section-title">Envoyer une réclamation</div>
     <div style="background:#fff;border-radius:12px;padding:1rem;box-shadow:var(--sh);margin-bottom:1rem;">
-        <form asp-action="EnvoyerReclamation" asp-controller="Notification" method="post">
+        <form action="/Notification/EnvoyerReclamation" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="absenceId" value="" />
             <div style="margin-bottom:.5rem;">
@@ -262,7 +262,7 @@ else
                 {
                     <details style="margin-top:.5rem;">
                         <summary style="font-size:.78rem;font-weight:600;color:var(--or);cursor:pointer;">✏️ Répondre</summary>
-                        <form asp-action="RepondreReclamation" asp-controller="Notification" method="post" style="margin-top:.5rem;">
+                        <form action="/Notification/RepondreReclamation" method="post" style="margin-top:.5rem;">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="reclamationId" value="@r.Id" />
                             <textarea name="reponse" rows="3" placeholder="Votre réponse..."></textarea>
@@ -270,6 +270,13 @@ else
                                 <option value="Traitée">Traitée</option>
                                 <option value="Rejetée">Rejetée</option>
                             </select>
+                            @if (r.AbsenceId != null)
+                            {
+                                <label style="display:block; margin-top:.6rem; font-size:.8rem; font-weight:600; color:var(--re); cursor:pointer;">
+                                    <input type="checkbox" name="supprimerAbsence" value="true" style="margin-right:5px;"> 
+                                    🗑️ Supprimer l'absence associée
+                                </label>
+                            }
                             <button type="submit" class="btn-send" style="margin-top:.4rem;">📤 Envoyer la réponse</button>
                         </form>
                     </details>
@@ -304,7 +311,7 @@ else
         @* Formulaire réclamation liée à cette absence *@
         <div id="reclForm" style="margin-top:1rem;display:none;">
             <div style="font-size:.82rem;font-weight:700;color:#374151;margin-bottom:.4rem;">📩 Envoyer une réclamation pour cette absence</div>
-            <form asp-action="EnvoyerReclamation" asp-controller="Notification" method="post">
+            <form action="/Notification/EnvoyerReclamation" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="absenceId"       id="rAbsId" />
                 <input type="hidden" name="destinataireId"  id="rDestId" />
